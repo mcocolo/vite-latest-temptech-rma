@@ -268,6 +268,21 @@ export default function App() {
       };
 
       const { error } = await supabase.from('devoluciones').insert(payload);
+      await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/enviar-email-reclamo`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+  },
+  body: JSON.stringify({
+    email: datosFormulario.email,
+    nombre: datosFormulario.nombre,
+    producto: datosFormulario.producto,
+    modelo: datosFormulario.modelo,
+    descripcion: datosFormulario.descripcion,
+    numero_caso: numeroCaso,
+  }),
+});
       if (error) throw error;
 
       setTrackingId(id);
