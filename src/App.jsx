@@ -267,23 +267,30 @@ export default function App() {
         estado: 'Ingresado',
       };
 
-      const { error } = await supabase.from('devoluciones').insert(payload);
-      await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/enviar-email-reclamo`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-  },
-  body: JSON.stringify({
-    email: datosFormulario.email,
-    nombre: datosFormulario.nombre,
-    producto: datosFormulario.producto,
-    modelo: datosFormulario.modelo,
-    descripcion: datosFormulario.descripcion,
-    numero_caso: numeroCaso,
-  }),
-});
-      if (error) throw error;
+    const { error } = await supabase.from('devoluciones').insert(payload);
+if (error) throw error;
+
+const respEmail = await fetch(
+  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/enviar-email-reclamo`,
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({
+      email: form.email.trim(),
+      nombre: form.nombreApellido.trim(),
+      producto: form.producto,
+      modelo: form.modelo,
+      descripcion: form.descripcionFalla.trim(),
+      numero_caso: id,
+    }),
+  }
+);
+
+const resultadoEmail = await respEmail.json();
+console.log('Resultado email:', resultadoEmail);
 
       setTrackingId(id);
       setEnviado(true);
