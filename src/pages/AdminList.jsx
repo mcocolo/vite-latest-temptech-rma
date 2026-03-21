@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-const [busquedaCaso, setBusquedaCaso] = useState('')
+
 function formatearFecha(fecha) {
   if (!fecha) return '-'
   const d = new Date(fecha)
@@ -136,7 +136,7 @@ export default function AdminList() {
 
   await cargar()
 }
-// aca va la funcion para el rechazo de casos
+
   async function rechazarCaso(item) {
     if (!textoRechazo.trim()) {
       alert('Tenés que indicar el motivo de rechazo')
@@ -161,18 +161,7 @@ export default function AdminList() {
     setRechazoAbiertoId(null)
     await cargar()
   }
-// aca va la funcion para el buscador de casos
-const datosFiltrados = datos.filter((item) => {
-  const texto = busquedaCaso.trim().toLowerCase()
 
-  if (!texto) return true
-
-  const tracking = String(item.tracking || '').toLowerCase()
-  const id = String(item.id || '').toLowerCase()
-
-  return tracking.includes(texto) || id.includes(texto)
-})
-//
   function abrirResolucion(item) {
     setResolucionAbiertaId(item.id)
     setEmpresaEnvio(item.empresa_envio || 'Correo Argentino')
@@ -332,7 +321,7 @@ Fecha de envío: ${fechaEnvio}`
         <p>No hay reclamos para mostrar.</p>
       ) : (
         <div style={{ display: 'grid', gap: 16 }}>
-          {datosFiltrados.map((item) => (
+          {datos.map((item) => (
             <div
               key={item.id}
               style={{
@@ -362,27 +351,8 @@ Fecha de envío: ${fechaEnvio}`
                 >
                   APROBADO
                 </div>
-                
               )}
-<div style={{ marginBottom: '16px' }}>
-  <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>
-    Buscar por código de caso
-  </label>
 
-  <input
-    type="text"
-    placeholder="Ej: DEV-20260320-22195 o ID 43"
-    value={busquedaCaso}
-    onChange={(e) => setBusquedaCaso(e.target.value)}
-    style={{
-      width: '100%',
-      maxWidth: '320px',
-      padding: '8px',
-      border: '1px solid #ccc',
-      borderRadius: '6px',
-    }}
-  />
-</div>
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ marginBottom: 6 }}>
                   <strong>ID:</strong> {item.id || '-'}
