@@ -11,7 +11,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { to, nombre, apellido } = req.body
+   const to = (req.body?.to || '').trim()
+const nombre = (req.body?.nombre || '').trim()
+const apellido = (req.body?.apellido || '').trim()
 
     if (!to) {
       return res.status(400).json({ error: 'Falta email del destinatario' })
