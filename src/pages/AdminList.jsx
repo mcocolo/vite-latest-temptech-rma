@@ -619,9 +619,7 @@ Fecha de envío: ${fechaEnvio}`
                   >
                     Desaprobar
                   </button>
-<button onClick={() => handleDesaprobar(item)}>
-  DESAPROBAR
-</button>
+
                   <button
   onClick={() => {
     alert(`ABRIENDO RECHAZO ${item.id}`)
