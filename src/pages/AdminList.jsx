@@ -498,10 +498,13 @@ Fecha de envío: ${fechaEnvio}`
 <div style={{ marginBottom: 6 }}>
   <strong>Fecha desaprobado:</strong> {formatearFecha(item.fecha_desaprobado)}
 </div>
+
                 <div style={{ marginBottom: 6 }}>
                   <strong>Garantía:</strong> {item.garantia || '-'}
                 </div>
-
+<div style={{ marginBottom: 6 }}>
+  <strong>Días garantía:</strong> {item.dias_garantia ?? '-'}
+</div>
                 <div style={{ marginBottom: 6 }}>
                   <strong>Motivo rechazo:</strong> {item.motivo_rechazo || '-'}
                 </div>
