@@ -103,29 +103,30 @@ export default function AdminList() {
   }
 
   if (valor === 'SI') {
-    try {
-      const resp = await fetch('/api/enviar-aprobado', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: item.email,
-          nombre: item.nombre,
-          apellido: item.apellido,
-        }),
-      })
+  try {
+    const resp = await fetch('/api/enviar-aprobado', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: item.email,
+        nombre: item.nombre,
+        apellido: item.apellido,
+      }),
+    })
 
-      if (!resp.ok) {
-        const data = await resp.json().catch(() => ({}))
-        console.error('Error enviando email de aprobado:', data)
-        alert('Se aprobó el caso, pero no se pudo enviar el email')
-      }
-    } catch (err) {
-      console.error('Error enviando email de aprobado:', err)
-      alert('Se aprobó el caso, pero falló el envío del email')
+    const data = await resp.json().catch(() => ({}))
+
+    if (!resp.ok) {
+      console.error('Error enviando email de aprobado:', data)
+      alert(`Se aprobó el caso, pero no se pudo enviar el email: ${data.detalle || data.error || 'sin detalle'}`)
     }
+  } catch (err) {
+    console.error('Error enviando email de aprobado:', err)
+    alert(`Se aprobó el caso, pero falló el envío del email: ${err.message}`)
   }
+}
 
   await cargar()
 }
