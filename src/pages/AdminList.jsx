@@ -138,28 +138,20 @@ export default function AdminList() {
 }
 
 async function rechazarCaso(item) {
-  console.log('ENTRO A RECHAZAR')
-  console.log('textoRechazo:', textoRechazo)
-
   if (!textoRechazo || !textoRechazo.trim()) {
     alert('Ingresá el motivo del rechazo')
     return
   }
-
-  const motivo = textoRechazo.trim()
-  console.log('ANTES DE SUPABASE')
 
   const { error } = await supabase
     .from('devoluciones')
     .update({
       aprobado: 'NO',
       estado: 'rechazado',
-      motivo_rechazo: motivo,
+      motivo_rechazo: textoRechazo.trim(),
       fecha_aprobado: new Date().toISOString(),
     })
     .eq('id', item.id)
-
-  console.log('DESPUES DE SUPABASE', error)
 
   if (error) {
     console.error('Error al rechazar caso:', error)
@@ -167,35 +159,10 @@ async function rechazarCaso(item) {
     return
   }
 
-  console.log('ANTES DEL FETCH RECHAZO')
-
- try {
-  const { data, error } = await supabase.functions.invoke('enviar-email-rechazo', {
-    body: {
-      to: String(item.email || '').trim(),
-      producto: item.producto || '',
-      modelo: item.modelo || '',
-      textoRechazo: textoRechazo.trim(),
-    },
-  })
-
-  console.log('RESPUESTA FUNCION RECHAZO:', { data, error })
-
-  if (error) {
-    alert(`Error al enviar email rechazo: ${error.message || JSON.stringify(error)}`)
-    return
-  }
-
-  if (data?.error) {
-    alert(`Error función rechazo: ${JSON.stringify(data)}`)
-    return
-  }
-} catch (err) {
-  console.error('ERROR FUNCION RECHAZO:', err)
-  alert(`Se rechazó el caso, pero falló el envío del mail: ${err.message || JSON.stringify(err)}`)
-}
-
+  setRechazoAbiertoId(null)
+  setTextoRechazo('')
   await cargar()
+  alert('Caso rechazado correctamente')
 }
 
   function abrirResolucion(item) {
