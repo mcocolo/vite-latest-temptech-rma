@@ -102,32 +102,42 @@ export default function AdminList() {
     return
   }
 
+  // 👇 DEBUG (MUY IMPORTANTE)
+  console.log('APROBANDO CASO:', {
+    email: item.email,
+    nombre: item.nombre,
+    apellido: item.apellido,
+  })
+
+  // 👇 ACA VA EL FETCH
   if (valor === 'SI') {
-  try {
-    const resp = await fetch('/api/enviar-aprobado', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: item.email,
-        nombre: item.nombre,
-        apellido: item.apellido,
-      }),
-    })
+    try {
+      const resp = await fetch('/api/enviar-aprobado', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: item.email,
+          nombre: item.nombre,
+          apellido: item.apellido,
+        }),
+      })
 
-    const data = await resp.json().catch(() => ({}))
+      const data = await resp.json().catch(() => ({}))
 
-    if (!resp.ok) {
-      console.error('Error enviando email de aprobado:', data)
-      alert(`Se aprobó el caso, pero no se pudo enviar el email: ${data.detalle || data.error || 'sin detalle'}`)
+      console.log('RESPUESTA API APROBADO:', data)
+
+      if (!resp.ok) {
+        alert('Se aprobó, pero falló el envío del mail')
+      }
+    } catch (err) {
+      console.error('ERROR FETCH APROBADO:', err)
+      alert('Se aprobó, pero el email falló')
     }
-  } catch (err) {
-    console.error('Error enviando email de aprobado:', err)
-    alert(`Se aprobó el caso, pero falló el envío del email: ${err.message}`)
   }
-}
 
+  // 👇 ESTO SIEMPRE AL FINAL
   await cargar()
 }
 
