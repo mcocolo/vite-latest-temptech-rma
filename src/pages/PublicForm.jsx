@@ -255,7 +255,21 @@ export default function PublicForm() {
         estado: 'Ingresado',
       }
 
-      const { error } = await supabase.from('devoluciones').insert(payload)
+const fechaCompra = new Date(form.fecha_compra)
+const fechaReclamo = new Date()
+
+const diasGarantia = Math.floor(
+  (fechaReclamo - fechaCompra) / (1000 * 60 * 60 * 24)
+)
+
+const { error } = await supabase
+  .from('devoluciones')
+  .insert({
+    nombre: form.nombre,
+    email: form.email,
+    fecha_compra: form.fecha_compra,
+    dias_garantia: diasGarantia
+  })
 
       if (error) {
         console.error('Error guardando reclamo:', error)
