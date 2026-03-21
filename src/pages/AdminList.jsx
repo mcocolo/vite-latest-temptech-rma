@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-const [casoSeleccionado, setCasoSeleccionado] = useState(null)
-const [mostrarModalRechazo, setMostrarModalRechazo] = useState(false)
-const [textoRechazo, setTextoRechazo] = useState('')
-const [enviandoRechazo, setEnviandoRechazo] = useState(false)
+
 function formatearFecha(fecha) {
   if (!fecha) return '-'
   const d = new Date(fecha)
@@ -25,6 +22,7 @@ export default function AdminList() {
   const [cargando, setCargando] = useState(true)
   const [filtroEstado, setFiltroEstado] = useState('Ingresado')
   const [errorTexto, setErrorTexto] = useState('')
+
   const [rechazoAbiertoId, setRechazoAbiertoId] = useState(null)
   const [textoRechazo, setTextoRechazo] = useState('')
 
@@ -84,102 +82,42 @@ export default function AdminList() {
     await cargar()
   }
 
-   const handleDesaprobar = async (item) => {
-  try {
-    console.log('DESAPROBAR:', item)
-
-    if (!item?.id) {
-      alert('No se encontró el caso')
-      return
+  async function marcarAprobado(item) {
+    const payload = {
+      aprobado: 'SI',
+      estado: 'pendiente',
+      fecha_aprobado: new Date().toISOString(),
+      motivo_rechazo: null,
     }
 
-    // 1. Actualizar en Supabase (deshacer aprobación)
     const { error } = await supabase
       .from('devoluciones')
-      .update({
-        estado: 'Ingresado',        // vuelve a pendiente
-        aprobada: false,
-        marca_agua: false,
-        resolucion: null,
-        fecha_aprobacion: null
-      })
+      .update(payload)
       .eq('id', item.id)
 
     if (error) {
-      console.error(error)
-      alert('Error al desaprobar')
+      console.error('Error al actualizar aprobado:', error)
+      alert('No se pudo actualizar el aprobado')
       return
     }
 
-    // 2. Enviar email DESAPROBADO (Vercel API)
-    const response = await fetch('/api/enviar-desaprobado', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: item.id,
-        email: item.email,
-        nombre: item.nombre,
-        producto: item.producto,
-        modelo: item.modelo
-      })
-    })
-
-    const data = await response.json()
-    console.log('email desaprobado:', data)
-
-    if (!response.ok) {
-      alert('Se desaprobó, pero falló el email')
-    } else {
-      alert('Caso desaprobado correctamente')
-    }
-
-    // 3. refrescar lista
-    await cargarCasos()
-
-  } catch (err) {
-    console.error(err)
-    alert('Error al desaprobar')
-  }
-}
-async function marcarAprobado(item, valor) {
-  const payload = {
-    aprobado: valor,
-    fecha_aprobado: new Date().toISOString(),
-  }
-
-  if (valor === 'SI') {
-    payload.estado = 'pendiente'
-  }
-
-  const { error } = await supabase
-    .from('devoluciones')
-    .update(payload)
-    .eq('id', item.id)
-
-  if (error) {
-    console.error('Error al actualizar aprobado:', error)
-    alert('No se pudo actualizar el aprobado')
-    return
-  }
-
-  if (valor === 'SI') {
     try {
-   console.log('APROBANDO CASO:', {
-  to: (item.email || '').trim(),
-  nombre: item.cliente || '',
-  apellido: '',
-})
+      console.log('APROBANDO CASO:', {
+        to: (item.email || '').trim(),
+        nombre: item.nombre_apellido || item.nombre || '',
+        apellido: '',
+      })
 
       const resp = await fetch('/api/enviar-aprobado', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-      body: JSON.stringify({
-  to: (item.email || '').trim(),
-  nombre: item.cliente || '',
-  apellido: '',
-})
+        body: JSON.stringify({
+          to: (item.email || '').trim(),
+          nombre: item.nombre_apellido || item.nombre || '',
+          apellido: '',
+        }),
       })
 
       const data = await resp.json().catch(() => ({}))
@@ -192,38 +130,90 @@ async function marcarAprobado(item, valor) {
       console.error('ERROR FETCH APROBADO:', err)
       alert('Se aprobó, pero falló el envío del mail')
     }
+
+    await cargar()
   }
 
-  await cargar()
-}
+  async function handleDesaprobar(item) {
+    try {
+      console.log('DESAPROBAR:', item)
 
-async function rechazarCaso(item) {
-  if (!textoRechazo || !textoRechazo.trim()) {
-    alert('Ingresá el motivo del rechazo')
-    return
+      if (!item?.id) {
+        alert('No se encontró el caso')
+        return
+      }
+
+      const { error } = await supabase
+        .from('devoluciones')
+        .update({
+          estado: 'Ingresado',
+          aprobado: 'NO',
+          fecha_aprobado: null,
+          motivo_rechazo: null,
+        })
+        .eq('id', item.id)
+
+      if (error) {
+        console.error('Error al desaprobar:', error)
+        alert('Error al desaprobar')
+        return
+      }
+
+      const response = await fetch('/api/enviar-desaprobado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: item.id,
+          email: item.email,
+          nombre: item.nombre_apellido || item.nombre || '',
+          producto: item.producto,
+          modelo: item.modelo,
+        }),
+      })
+
+      const data = await response.json().catch(() => ({}))
+      console.log('email desaprobado:', data)
+
+      if (!response.ok) {
+        alert('Se desaprobó, pero falló el email')
+      } else {
+        alert('Caso desaprobado correctamente')
+      }
+
+      await cargar()
+    } catch (err) {
+      console.error('Error al desaprobar:', err)
+      alert('Error al desaprobar')
+    }
   }
 
-  const { error } = await supabase
-    .from('devoluciones')
-    .update({
-      aprobado: 'NO',
-      estado: 'rechazado',
-      motivo_rechazo: textoRechazo.trim(),
-      fecha_aprobado: new Date().toISOString(),
-    })
-    .eq('id', item.id)
+  async function rechazarCaso(item) {
+    if (!textoRechazo || !textoRechazo.trim()) {
+      alert('Ingresá el motivo del rechazo')
+      return
+    }
 
-  if (error) {
-    console.error('Error al rechazar caso:', error)
-    alert('No se pudo rechazar el caso')
-    return
+    const { error } = await supabase
+      .from('devoluciones')
+      .update({
+        aprobado: 'NO',
+        estado: 'rechazado',
+        motivo_rechazo: textoRechazo.trim(),
+        fecha_aprobado: new Date().toISOString(),
+      })
+      .eq('id', item.id)
+
+    if (error) {
+      console.error('Error al rechazar caso:', error)
+      alert('No se pudo rechazar el caso')
+      return
+    }
+
+    setRechazoAbiertoId(null)
+    setTextoRechazo('')
+    await cargar()
+    alert('Caso rechazado correctamente')
   }
-
-  setRechazoAbiertoId(null)
-  setTextoRechazo('')
-  await cargar()
-  alert('Caso rechazado correctamente')
-}
 
   function abrirResolucion(item) {
     setResolucionAbiertaId(item.id)
@@ -298,7 +288,7 @@ Fecha de envío: ${fechaEnvio}`
     }
   }
 
-  const guardarResolucion = async (item) => {
+  async function guardarResolucion(item) {
     if (!empresaEnvio) {
       alert('Seleccioná una empresa')
       return
@@ -599,7 +589,7 @@ Fecha de envío: ${fechaEnvio}`
                   </button>
 
                   <button
-                    onClick={() => marcarAprobado(item, 'SI')}
+                    onClick={() => marcarAprobado(item)}
                     disabled={item.aprobado === 'SI'}
                     style={{
                       opacity: item.aprobado === 'SI' ? 0.6 : 1,
@@ -610,7 +600,7 @@ Fecha de envío: ${fechaEnvio}`
                   </button>
 
                   <button
-                    onClick={() => marcarAprobado(item, 'NO')}
+                    onClick={() => handleDesaprobar(item)}
                     disabled={item.aprobado !== 'SI'}
                     style={{
                       opacity: item.aprobado !== 'SI' ? 0.6 : 1,
@@ -621,13 +611,13 @@ Fecha de envío: ${fechaEnvio}`
                   </button>
 
                   <button
-  onClick={() => {
-    alert(`ABRIENDO RECHAZO ${item.id}`)
-    setRechazoAbiertoId(item.id)
-  }}
->
-  Rechazar
-</button>
+                    onClick={() => {
+                      setRechazoAbiertoId(item.id)
+                      setTextoRechazo(item.motivo_rechazo || '')
+                    }}
+                  >
+                    Rechazar
+                  </button>
 
                   <button onClick={() => cambiarEstado(item, 'cerrado')}>
                     Cerrar
@@ -657,15 +647,20 @@ Fecha de envío: ${fechaEnvio}`
                     />
 
                     <div style={{ display: 'flex', gap: 8 }}>
-<button
-  type="button"
-  onClick={() => {
-    alert(`CLICK RECHAZO ID ${item.id}`)
-  }}
->
-  Confirmar rechazo
-</button>
-</div>
+                      <button type="button" onClick={() => rechazarCaso(item)}>
+                        Confirmar rechazo
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRechazoAbiertoId(null)
+                          setTextoRechazo('')
+                        }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   </div>
                 )}
 
