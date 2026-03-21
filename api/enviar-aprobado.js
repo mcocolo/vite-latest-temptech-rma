@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       to: [to],
       subject: 'TEMPTECH - Solicitud aprobada',
       html: `
-        <p>Estimado cliente ${nombre || ''} ${apellido || ''},</p>
+        <p>Estimado cliente${nombre ? ' ' + nombre : ''}${apellido ? ' ' + apellido : ''},</p>
 
         <p>
           Le comunicamos que su proceso fue revisado por nuestro equipo y el mismo fue
