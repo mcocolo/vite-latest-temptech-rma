@@ -124,13 +124,13 @@ export default function AdminList() {
         }),
       })
 
-      const data = await resp.json().catch(() => ({}))
+const data = await resp.json().catch(() => ({}))
 
-      console.log('RESPUESTA API APROBADO:', data)
+console.log('RESPUESTA API APROBADO:', JSON.stringify(data, null, 2))
 
-      if (!resp.ok) {
-        alert('Se aprobó, pero falló el envío del mail')
-      }
+if (!resp.ok) {
+  alert(`Error mail aprobado: ${JSON.stringify(data.detalle || data.error || data, null, 2)}`)
+}
     } catch (err) {
       console.error('ERROR FETCH APROBADO:', err)
       alert('Se aprobó, pero el email falló')

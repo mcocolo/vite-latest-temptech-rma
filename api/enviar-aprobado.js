@@ -31,10 +31,10 @@ Equipo Soporte TEMPTECH`,
 console.log('RESPUESTA COMPLETA RESEND APROBADO:', JSON.stringify(resultado, null, 2))
 
 if (resultado?.error) {
-  return res.status(500).json({
-    error: 'Resend devolvió error',
-    detalle: resultado.error,
-  })
+return res.status(500).json({
+  error: 'Resend devolvió error',
+  detalle: JSON.stringify(resultado.error, null, 2),
+})
 }
 
 return res.status(200).json({
