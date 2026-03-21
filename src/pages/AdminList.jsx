@@ -81,7 +81,8 @@ export default function AdminList() {
     await cargar()
   }
 
-    async function marcarAprobado(item, valor) {
+   
+async function marcarAprobado(item, valor) {
   const payload = {
     aprobado: valor,
     fecha_aprobado: new Date().toISOString(),
