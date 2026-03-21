@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     }
 
    const resultado = await resend.emails.send({
-  from: 'Soporte TEMPTECH <notificaciones@temptech.com.ar>',
+  from: 'onboarding@resend.dev',
   to: [email],
   subject: 'TEMPTECH - Solicitud aprobada',
   text: `Estimado cliente ${nombre || ''} ${apellido || ''},
