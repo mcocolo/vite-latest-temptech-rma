@@ -152,28 +152,36 @@ export default function AdminList() {
   }
 
   try {
-    const resp = await fetch('/api/enviar-rechazo', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: (item.email || '').trim(),
-        producto: item.producto || '',
-        modelo: item.modelo || '',
-        textoRechazo: textoRechazo || '',
-      }),
-    })
+  console.log('RECHAZANDO CASO:', {
+    to: (item.email || '').trim(),
+    producto: item.producto || '',
+    modelo: item.modelo || '',
+    textoRechazo: textoRechazo || '',
+  })
 
-    const data = await resp.json().catch(() => ({}))
+  const resp = await fetch('/api/enviar-rechazo', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      to: (item.email || '').trim(),
+      producto: item.producto || '',
+      modelo: item.modelo || '',
+      textoRechazo: textoRechazo || '',
+    }),
+  })
 
-    if (!resp.ok) {
-      alert(`Error mail rechazo: ${data.detalle || data.error || 'Sin detalle'}`)
-    }
-  } catch (err) {
-    console.error('ERROR FETCH RECHAZO:', err)
-    alert('Se rechazó el caso, pero falló el envío del mail')
+  const data = await resp.json().catch(() => ({}))
+  console.log('RESPUESTA API RECHAZO:', data)
+
+  if (!resp.ok) {
+    alert(`Error mail rechazo: ${data.detalle || data.error || 'Sin detalle'}`)
   }
+} catch (err) {
+  console.error('ERROR FETCH RECHAZO:', err)
+  alert('Se rechazó el caso, pero falló el envío del mail')
+}
 
   await cargar()
 }
