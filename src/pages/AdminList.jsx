@@ -633,6 +633,7 @@ Fecha de envío: ${fechaEnvio}`
 >
   Confirmar rechazo
 </button>
+</div>
                   </div>
                 )}
 
