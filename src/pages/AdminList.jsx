@@ -624,19 +624,17 @@ Fecha de envío: ${fechaEnvio}`
                     />
 
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => rechazarCaso(item)}>
-                        Confirmar rechazo
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setRechazoAbiertoId(null)
-                          setTextoRechazo('')
-                        }}
-                      >
-                        Cancelar
-                      </button>
-                    </div>
+  <button
+    type="button"
+    onClick={() => {
+      alert('CLICK RECHAZO')
+      console.log('CLICK BOTON RECHAZO', item)
+      rechazarCaso(item)
+    }}
+  >
+    Confirmar rechazo
+  </button>
+</div>
                   </div>
                 )}
 
