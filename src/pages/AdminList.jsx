@@ -137,51 +137,62 @@ export default function AdminList() {
   await cargar()
 }
 
-  async function rechazarCaso(item) {
+async function rechazarCaso(item) {
+  console.log('ENTRO A RECHAZAR')
+  console.log('textoRechazo:', textoRechazo)
+
+  if (!textoRechazo || !textoRechazo.trim()) {
+    alert('Ingresá el motivo del rechazo')
+    return
+  }
+
+  const motivo = textoRechazo.trim()
+  console.log('ANTES DE SUPABASE')
+
   const { error } = await supabase
     .from('devoluciones')
     .update({
       aprobado: 'NO',
-      motivo_rechazo: textoRechazo,
+      estado: 'rechazado',
+      motivo_rechazo: motivo,
+      fecha_aprobado: new Date().toISOString(),
     })
     .eq('id', item.id)
 
+  console.log('DESPUES DE SUPABASE', error)
+
   if (error) {
+    console.error('Error al rechazar caso:', error)
     alert('No se pudo rechazar el caso')
     return
   }
 
+  console.log('ANTES DEL FETCH RECHAZO')
+
   try {
-  console.log('RECHAZANDO CASO:', {
-    to: (item.email || '').trim(),
-    producto: item.producto || '',
-    modelo: item.modelo || '',
-    textoRechazo: textoRechazo || '',
-  })
+    const resp = await fetch('/api/enviar-rechazo', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: (item.email || '').trim(),
+        producto: item.producto || '',
+        modelo: item.modelo || '',
+        textoRechazo: motivo,
+      }),
+    })
 
-  const resp = await fetch('/api/enviar-rechazo', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      to: (item.email || '').trim(),
-      producto: item.producto || '',
-      modelo: item.modelo || '',
-      textoRechazo: textoRechazo || '',
-    }),
-  })
+    const data = await resp.json().catch(() => ({}))
+    console.log('RESPUESTA API RECHAZO:', data)
 
-  const data = await resp.json().catch(() => ({}))
-  console.log('RESPUESTA API RECHAZO:', data)
-
-  if (!resp.ok) {
-    alert(`Error mail rechazo: ${data.detalle || data.error || 'Sin detalle'}`)
+    if (!resp.ok) {
+      alert(`Error mail rechazo: ${data.detalle || data.error || 'Sin detalle'}`)
+    }
+  } catch (err) {
+    console.error('ERROR FETCH RECHAZO:', err)
+    alert('Se rechazó el caso, pero falló el envío del mail')
   }
-} catch (err) {
-  console.error('ERROR FETCH RECHAZO:', err)
-  alert('Se rechazó el caso, pero falló el envío del mail')
-}
 
   await cargar()
 }
