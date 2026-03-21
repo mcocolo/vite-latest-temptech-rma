@@ -169,30 +169,31 @@ async function rechazarCaso(item) {
 
   console.log('ANTES DEL FETCH RECHAZO')
 
-  try {
-    const resp = await fetch('/api/enviar-rechazo', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: (item.email || '').trim(),
-        producto: item.producto || '',
-        modelo: item.modelo || '',
-        textoRechazo: motivo,
-      }),
-    })
+ try {
+  const { data, error } = await supabase.functions.invoke('enviar-email-rechazo', {
+    body: {
+      to: String(item.email || '').trim(),
+      producto: item.producto || '',
+      modelo: item.modelo || '',
+      textoRechazo: textoRechazo.trim(),
+    },
+  })
 
-    const data = await resp.json().catch(() => ({}))
-    console.log('RESPUESTA API RECHAZO:', data)
+  console.log('RESPUESTA FUNCION RECHAZO:', { data, error })
 
-    if (!resp.ok) {
-      alert(`Error mail rechazo: ${data.detalle || data.error || 'Sin detalle'}`)
-    }
-  } catch (err) {
-    console.error('ERROR FETCH RECHAZO:', err)
-    alert('Se rechazó el caso, pero falló el envío del mail')
+  if (error) {
+    alert(`Error al enviar email rechazo: ${error.message || JSON.stringify(error)}`)
+    return
   }
+
+  if (data?.error) {
+    alert(`Error función rechazo: ${JSON.stringify(data)}`)
+    return
+  }
+} catch (err) {
+  console.error('ERROR FUNCION RECHAZO:', err)
+  alert(`Se rechazó el caso, pero falló el envío del mail: ${err.message || JSON.stringify(err)}`)
+}
 
   await cargar()
 }
@@ -624,16 +625,16 @@ Fecha de envío: ${fechaEnvio}`
                     />
 
                     <div style={{ display: 'flex', gap: 8 }}>
-  <button
-    type="button"
-    onClick={() => {
-      alert('CLICK RECHAZO')
-      console.log('CLICK BOTON RECHAZO', item)
-      rechazarCaso(item)
-    }}
-  >
-    Confirmar rechazo
-  </button>
+<button
+  type="button"
+  onClick={() => {
+    alert('CLICK FUNCIONA')
+    console.log('CLICK OK', item)
+    rechazarCaso(item)
+  }}
+>
+  Confirmar rechazo
+</button>
 </div>
                   </div>
                 )}
