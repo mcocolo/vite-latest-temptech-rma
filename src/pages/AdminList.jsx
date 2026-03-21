@@ -561,9 +561,14 @@ Fecha de envío: ${fechaEnvio}`
                     Desaprobar
                   </button>
 
-                  <button onClick={() => setRechazoAbiertoId(item.id)}>
-                    Rechazar
-                  </button>
+                  <button
+  onClick={() => {
+    alert(`ABRIENDO RECHAZO ${item.id}`)
+    setRechazoAbiertoId(item.id)
+  }}
+>
+  Rechazar
+</button>
 
                   <button onClick={() => cambiarEstado(item, 'cerrado')}>
                     Cerrar
