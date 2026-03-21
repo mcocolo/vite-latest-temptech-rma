@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-
+console.log('VERSION NUEVA')
 function formatearFecha(fecha) {
   if (!fecha) return '-'
   const d = new Date(fecha)
