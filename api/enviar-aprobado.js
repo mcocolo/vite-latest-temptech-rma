@@ -46,8 +46,13 @@ if (error) {
   })
 }
 
-    return res.status(200).json({ ok: true, data })
-  } catch (err) {
-    return res.status(500).json({ error: err.message || 'Error enviando email' })
-  }
+return res.status(200).json({ ok: true, data })
+} catch (err) {
+  console.error('CATCH APROBADO:', err)
+
+  return res.status(500).json({
+    error: 'Error enviando email',
+    detalle: err?.message || String(err),
+  })
+}
 }
