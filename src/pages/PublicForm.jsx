@@ -234,13 +234,15 @@ export default function PublicForm() {
 // 🔹 CALCULO DIAS GARANTIA
 let diasGarantia = null
 
-if (form.fechaCompra) {
+if (form.fechaCompra && form.fechaIngreso) {
   const fechaCompra = new Date(form.fechaCompra)
-  const fechaReclamo = new Date()
+  const fechaReclamo = new Date(form.fechaIngreso)
 
-  diasGarantia = Math.floor(
-    (fechaReclamo - fechaCompra) / (1000 * 60 * 60 * 24)
-  )
+  if (!isNaN(fechaCompra.getTime()) && !isNaN(fechaReclamo.getTime())) {
+    diasGarantia = Math.floor(
+      (fechaReclamo - fechaCompra) / (1000 * 60 * 60 * 24)
+    )
+  }
 }
       const payload = {
         tracking_id: id,
