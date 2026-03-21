@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-console.log('VERSION NUEVA')
+const [casoSeleccionado, setCasoSeleccionado] = useState(null)
+const [mostrarModalRechazo, setMostrarModalRechazo] = useState(false)
+const [textoRechazo, setTextoRechazo] = useState('')
+const [enviandoRechazo, setEnviandoRechazo] = useState(false)
 function formatearFecha(fecha) {
   if (!fecha) return '-'
   const d = new Date(fecha)
@@ -81,7 +84,63 @@ export default function AdminList() {
     await cargar()
   }
 
-   
+   const handleDesaprobar = async (item) => {
+  try {
+    console.log('DESAPROBAR:', item)
+
+    if (!item?.id) {
+      alert('No se encontró el caso')
+      return
+    }
+
+    // 1. Actualizar en Supabase (deshacer aprobación)
+    const { error } = await supabase
+      .from('devoluciones')
+      .update({
+        estado: 'Ingresado',        // vuelve a pendiente
+        aprobada: false,
+        marca_agua: false,
+        resolucion: null,
+        fecha_aprobacion: null
+      })
+      .eq('id', item.id)
+
+    if (error) {
+      console.error(error)
+      alert('Error al desaprobar')
+      return
+    }
+
+    // 2. Enviar email DESAPROBADO (Vercel API)
+    const response = await fetch('/api/enviar-desaprobado', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: item.id,
+        email: item.email,
+        nombre: item.nombre,
+        producto: item.producto,
+        modelo: item.modelo
+      })
+    })
+
+    const data = await response.json()
+    console.log('email desaprobado:', data)
+
+    if (!response.ok) {
+      alert('Se desaprobó, pero falló el email')
+    } else {
+      alert('Caso desaprobado correctamente')
+    }
+
+    // 3. refrescar lista
+    await cargarCasos()
+
+  } catch (err) {
+    console.error(err)
+    alert('Error al desaprobar')
+  }
+}
 async function marcarAprobado(item, valor) {
   const payload = {
     aprobado: valor,
@@ -560,7 +619,9 @@ Fecha de envío: ${fechaEnvio}`
                   >
                     Desaprobar
                   </button>
-
+<button onClick={() => handleDesaprobar(item)}>
+  DESAPROBAR
+</button>
                   <button
   onClick={() => {
     alert(`ABRIENDO RECHAZO ${item.id}`)
