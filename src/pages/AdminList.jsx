@@ -117,11 +117,11 @@ export default function AdminList() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        to: (item.email || '').trim(),
-        nombre: item.nombre || '',
-        apellido: item.apellido || '',
-      }),
+body: JSON.stringify({
+  to: (item.email || '').trim(),
+  nombre: item.nombre || '',
+  apellido: item.apellido || '',
+})
     })
 
     const data = await resp.json().catch(() => ({}))

@@ -37,9 +37,14 @@ const apellido = (req.body?.apellido || '').trim()
       `,
     })
 
-    if (error) {
-      return res.status(500).json({ error })
-    }
+if (error) {
+  console.error('ERROR RESEND APROBADO:', error)
+
+  return res.status(500).json({
+    error: 'Error enviando email',
+    detalle: error?.message || JSON.stringify(error) || 'Sin detalle',
+  })
+}
 
     return res.status(200).json({ ok: true, data })
   } catch (err) {
