@@ -256,22 +256,38 @@ export default function PublicForm() {
       }
 
       const { error } = await supabase.from('devoluciones').insert(payload)
-      if (error) throw error
 
-      const { error: emailError } = await supabase.functions.invoke('enviar-email-alta-reclamo', {
-        body: {
-          email: form.email.trim(),
-          nombre: form.nombreApellido.trim(),
-          producto: form.producto,
-          modelo: form.modelo,
-          descripcion: form.descripcionFalla.trim(),
-          trackingId: id,
-        },
-      })
-
-      if (emailError) {
-        console.error('Error enviando email:', emailError)
+      if (error) {
+        console.error('Error guardando reclamo:', error)
+        throw error
       }
+
+      console.log('LLAMANDO FUNCION EMAIL')
+console.log('SUPABASE URL:', import.meta.env.VITE_SUPABASE_URL)
+console.log('ANON KEY OK:', !!import.meta.env.VITE_SUPABASE_ANON_KEY)
+      const { data: emailData, error: emailError } = await supabase.functions.invoke(
+  'alta-reclamo-email',
+  {
+    body: {
+      email: form.email.trim(),
+      nombre: form.nombreApellido.trim(),
+      producto: form.producto,
+      modelo: form.modelo,
+      descripcion: form.descripcionFalla.trim(),
+      trackingId: id,
+    },
+  }
+)
+
+console.log('RESPUESTA FUNCION EMAIL:', emailData)
+console.log('ERROR FUNCION EMAIL:', emailError)
+
+if (emailError) {
+  console.error('Error enviando email:', emailError)
+  alert(`Error enviando email: ${emailError.message || JSON.stringify(emailError)}`)
+}
+
+
 
       setTrackingId(id)
       setMensaje(`Solicitud registrada correctamente. Tu ID de seguimiento es ${id}`)
@@ -332,7 +348,7 @@ export default function PublicForm() {
               marginBottom: 18,
             }}
           >
-            {mensaje} {trackingId ? <strong>{trackingId}</strong> : null}
+            {mensaje}
           </div>
         ) : null}
 
@@ -475,7 +491,11 @@ export default function PublicForm() {
               onChange={(e) => update('ventaManual', e.target.value)}
               style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
             />
-            <input type="file" accept="image/*,.pdf" onChange={(e) => setComprobante(e.target.files?.[0] || null)} />
+            <input
+              type="file"
+              accept="image/*,.pdf"
+              onChange={(e) => setComprobante(e.target.files?.[0] || null)}
+            />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -543,7 +563,11 @@ export default function PublicForm() {
 
           <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 6 }}>
             <label>Adjuntar Imagen Producto</label>
-            <input type="file" accept="image/*,.pdf" onChange={(e) => setImagenProducto(e.target.files?.[0] || null)} />
+            <input
+              type="file"
+              accept="image/*,.pdf"
+              onChange={(e) => setImagenProducto(e.target.files?.[0] || null)}
+            />
           </div>
 
           <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>

@@ -81,29 +81,54 @@ export default function AdminList() {
     await cargar()
   }
 
-  async function marcarAprobado(item, valor) {
-    const payload = {
-      aprobado: valor,
-      fecha_aprobado: new Date().toISOString(),
-    }
-
-    if (valor === 'SI') {
-      payload.estado = 'pendiente'
-    }
-
-    const { error } = await supabase
-      .from('devoluciones')
-      .update(payload)
-      .eq('id', item.id)
-
-    if (error) {
-      console.error('Error al actualizar aprobado:', error)
-      alert('No se pudo actualizar el aprobado')
-      return
-    }
-
-    await cargar()
+    async function marcarAprobado(item, valor) {
+  const payload = {
+    aprobado: valor,
+    fecha_aprobado: new Date().toISOString(),
   }
+
+  if (valor === 'SI') {
+    payload.estado = 'pendiente'
+  }
+
+  const { error } = await supabase
+    .from('devoluciones')
+    .update(payload)
+    .eq('id', item.id)
+
+  if (error) {
+    console.error('Error al actualizar aprobado:', error)
+    alert('No se pudo actualizar el aprobado')
+    return
+  }
+
+  if (valor === 'SI') {
+    try {
+      const resp = await fetch('/api/enviar-aprobado', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: item.email,
+          nombre: item.nombre,
+          apellido: item.apellido,
+        }),
+      })
+
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}))
+        console.error('Error enviando email de aprobado:', data)
+        alert('Se aprobó el caso, pero no se pudo enviar el email')
+      }
+    } catch (err) {
+      console.error('Error enviando email de aprobado:', err)
+      alert('Se aprobó el caso, pero falló el envío del email')
+    }
+  }
+
+  await cargar()
+}
 
   async function rechazarCaso(item) {
     if (!textoRechazo.trim()) {
