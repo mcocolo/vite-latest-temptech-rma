@@ -42,7 +42,7 @@ if (error) {
 
   return res.status(500).json({
     error: 'Error enviando email',
-    detalle: error?.message || JSON.stringify(error) || 'Sin detalle',
+    detalle: error?.message || JSON.stringify(error),
   })
 }
 
