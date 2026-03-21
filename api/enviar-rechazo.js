@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
-
+console.log('RECHAZO TIENE RESEND_API_KEY?', !!process.env.RESEND_API_KEY)
+console.log('RECHAZO PRIMEROS 6 CHARS KEY:', process.env.RESEND_API_KEY?.slice(0, 6))
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export default async function handler(req, res) {

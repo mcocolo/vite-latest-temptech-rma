@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
-
+console.log('TIENE RESEND_API_KEY?', !!process.env.RESEND_API_KEY)
+console.log('PRIMEROS 6 CHARS KEY:', process.env.RESEND_API_KEY?.slice(0, 6))
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export default async function handler(req, res) {
@@ -17,7 +18,7 @@ export default async function handler(req, res) {
     }
 
    const resultado = await resend.emails.send({
-  from: 'TempTech <onboarding@resend.dev',
+  from: 'TempTech <onboarding@resend.dev>',
   to: [email],
   subject: 'TEMPTECH - Solicitud aprobada',
   text: `Estimado cliente ${nombre || ''} ${apellido || ''},
