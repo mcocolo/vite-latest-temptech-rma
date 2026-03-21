@@ -231,7 +231,17 @@ export default function PublicForm() {
 
       const comprobanteUrl = await subirArchivo(comprobante, id, 'comprobantes')
       const imagenProductoUrl = await subirArchivo(imagenProducto, id, 'productos')
+// 🔹 CALCULO DIAS GARANTIA
+let diasGarantia = null
 
+if (form.fechaCompra) {
+  const fechaCompra = new Date(form.fechaCompra)
+  const fechaReclamo = new Date()
+
+  diasGarantia = Math.floor(
+    (fechaReclamo - fechaCompra) / (1000 * 60 * 60 * 24)
+  )
+}
       const payload = {
         tracking_id: id,
         fecha_ingreso: form.fechaIngreso,
@@ -242,6 +252,7 @@ export default function PublicForm() {
         codigo_postal: form.codigoPostal.trim(),
         telefono: form.telefono.trim(),
         fecha_compra: form.fechaCompra || null,
+        dias_garantia: diasGarantia,
         canal: form.canal || null,
         vendedor: form.vendedor.trim() || null,
         numero_venta_manual: form.ventaManual.trim() || null,
