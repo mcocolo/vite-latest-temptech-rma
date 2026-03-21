@@ -143,15 +143,16 @@ export default function AdminList() {
         return
       }
 
-      const { error } = await supabase
-        .from('devoluciones')
-        .update({
-          estado: 'Ingresado',
-          aprobado: 'NO',
-          fecha_aprobado: null,
-          motivo_rechazo: null,
-        })
-        .eq('id', item.id)
+  const { error } = await supabase
+  .from('devoluciones')
+  .update({
+    estado: 'Ingresado',
+    aprobado: 'NO',
+    fecha_aprobado: null,
+    fecha_desaprobado: new Date().toISOString(),
+    motivo_rechazo: null,
+  })
+  .eq('id', item.id)
 
       if (error) {
         console.error('Error al desaprobar:', error)
@@ -494,7 +495,9 @@ Fecha de envío: ${fechaEnvio}`
                 <div style={{ marginBottom: 6 }}>
                   <strong>Fecha aprobado:</strong> {formatearFecha(item.fecha_aprobado)}
                 </div>
-
+<div style={{ marginBottom: 6 }}>
+  <strong>Fecha desaprobado:</strong> {formatearFecha(item.fecha_desaprobado)}
+</div>
                 <div style={{ marginBottom: 6 }}>
                   <strong>Garantía:</strong> {item.garantia || '-'}
                 </div>
