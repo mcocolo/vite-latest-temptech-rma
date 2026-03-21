@@ -303,7 +303,7 @@ Fecha de envío: ${fechaEnvio}`
           <option value="todos">Todos</option>
           <option value="Ingresado">Ingresado</option>
           <option value="pendiente">Pendiente</option>
-          <option value="resolucion">Resolución</option>
+          <option value="Resolucion">Resolución</option>
           <option value="rechazado">Rechazado</option>
           <option value="cerrado">Cerrado</option>
         </select>
