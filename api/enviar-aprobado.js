@@ -1,52 +1,46 @@
 import { Resend } from 'resend'
-console.log('TIENE RESEND_API_KEY?', !!process.env.RESEND_API_KEY)
-console.log('PRIMEROS 6 CHARS KEY:', process.env.RESEND_API_KEY?.slice(0, 6))
+
+console.log('APROBADO TIENE RESEND_API_KEY?', !!process.env.RESEND_API_KEY)
+console.log('APROBADO PRIMEROS 6 CHARS KEY:', process.env.RESEND_API_KEY?.slice(0, 6))
+
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método no permitido' })
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
-    const { email, nombre, apellido } = req.body
+    const { to, nombre, apellido } = req.body
 
-    console.log('DATOS RECIBIDOS EN APROBADO:', { email, nombre, apellido })
-
-    if (!email) {
+    if (!to) {
       return res.status(400).json({ error: 'Falta email del destinatario' })
     }
 
-   const resultado = await resend.emails.send({
-  from: 'TempTech <onboarding@resend.dev>',
-  to: [email],
-  subject: 'TEMPTECH - Solicitud aprobada',
-  text: `Estimado cliente ${nombre || ''} ${apellido || ''},
+    const { data, error } = await resend.emails.send({
+      from: 'TempTech <onboarding@resend.dev>',
+      to: [to],
+      subject: 'TEMPTECH - Solicitud aprobada',
+      html: `
+        <p>Estimado cliente ${nombre || ''} ${apellido || ''},</p>
 
-Le comunicamos que su proceso fue revisado por nuestro equipo y el mismo fue Aprobado. Esto quiere decir de que la información cargada se encuentra completa y en condiciones. A la brevedad nos estaremos comunicando para brindarle novedades para su resolución.
+        <p>
+          Le comunicamos que su proceso fue revisado por nuestro equipo y el mismo fue
+          <b>Aprobado</b>.
+          Esto quiere decir que la información cargada se encuentra completa y en condiciones.
+          A la brevedad nos estaremos comunicando para brindarle novedades para su resolución.
+        </p>
 
-Saludos
-Equipo Soporte TEMPTECH`,
-})
-
-console.log('RESPUESTA COMPLETA RESEND APROBADO:', JSON.stringify(resultado, null, 2))
-
-if (resultado?.error) {
-return res.status(500).json({
-  error: 'Resend devolvió error',
-  detalle: JSON.stringify(resultado.error, null, 2),
-})
-}
-
-return res.status(200).json({
-  ok: true,
-  resultado,
-})
-  } catch (error) {
-    console.error('ERROR EMAIL APROBADO:', error)
-    return res.status(500).json({
-      error: 'Error enviando email',
-      detalle: error?.message || String(error),
+        <p>Saludos cordiales,<br/>Equipo Soporte TEMPTECH</p>
+      `,
     })
+
+    if (error) {
+      return res.status(500).json({ error })
+    }
+
+    return res.status(200).json({ ok: true, data })
+  } catch (err) {
+    return res.status(500).json({ error: err.message || 'Error enviando email' })
   }
 }
