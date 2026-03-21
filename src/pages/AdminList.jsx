@@ -628,14 +628,11 @@ Fecha de envío: ${fechaEnvio}`
 <button
   type="button"
   onClick={() => {
-    alert('CLICK FUNCIONA')
-    console.log('CLICK OK', item)
-    rechazarCaso(item)
+    alert(`CLICK RECHAZO ID ${item.id}`)
   }}
 >
   Confirmar rechazo
 </button>
-</div>
                   </div>
                 )}
 
