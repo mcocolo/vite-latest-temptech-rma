@@ -265,11 +265,12 @@ Fecha de envío: ${fechaEnvio}`
       const { data, error } = await supabase.functions.invoke('enviar-email-resolucion', {
         body: {
           to: String(item.email || '').trim(),
-          subject: `TEMPTECH - Resolución de reclamo ${item.tracking_id}`,
-          text: cuerpo,
-          empresa: empresaEnvio,
-          tracking: empresaEnvio === 'Logistica Propia' ? '' : codigoSeguimiento,
-          fecha: empresaEnvio === 'Logistica Propia' ? fechaEnvio : '',
+    subject: `TEMPTECH - Resolución de reclamo ${item.tracking_id}`,
+    text: cuerpo,
+    tracking_id: item.tracking_id || '',
+    empresa: empresaEnvio,
+    tracking: empresaEnvio === 'Logistica Propia' ? '' : codigoSeguimiento,
+    fecha: empresaEnvio === 'Logistica Propia' ? fechaEnvio : '',
         },
       })
 
