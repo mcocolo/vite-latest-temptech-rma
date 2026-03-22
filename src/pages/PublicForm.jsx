@@ -244,29 +244,31 @@ if (form.fechaCompra && form.fechaIngreso) {
     )
   }
 }
+console.log('diasGarantia:', diasGarantia)
+console.log('payload:', payload)
       const payload = {
-        tracking_id: id,
-        fecha_ingreso: form.fechaIngreso,
-        nombre_apellido: form.nombreApellido.trim(),
-        direccion: form.direccion.trim(),
-        localidad: form.localidad.trim(),
-        provincia: form.provincia,
-        codigo_postal: form.codigoPostal.trim(),
-        telefono: form.telefono.trim(),
-        fecha_compra: form.fechaCompra || null,
-        dias_garantia: diasGarantia,
-        canal: form.canal || null,
-        vendedor: form.vendedor.trim() || null,
-        numero_venta_manual: form.ventaManual.trim() || null,
-        comprobante_url: comprobanteUrl,
-        producto: form.producto,
-        modelo: form.modelo,
-        motivo: form.motivo,
-        descripcion_falla: form.descripcionFalla.trim(),
-        imagen_producto_url: imagenProductoUrl,
-        email: form.email.trim(),
-        estado: 'Ingresado',
-      }
+  tracking_id: id,
+  fecha_ingreso: form.fechaIngreso,
+  nombre_apellido: form.nombreApellido.trim(),
+  direccion: form.direccion.trim(),
+  localidad: form.localidad.trim(),
+  provincia: form.provincia,
+  codigo_postal: form.codigoPostal.trim(),
+  telefono: form.telefono.trim(),
+  fecha_compra: form.fechaCompra || null,
+  dias_garantia: diasGarantia,
+  canal: form.canal || null,
+  vendedor: form.vendedor.trim() || null,
+  numero_venta_manual: form.ventaManual.trim() || null,
+  comprobante_url: comprobanteUrl,
+  producto: form.producto,
+  modelo: form.modelo,
+  motivo: form.motivo,
+  descripcion_falla: form.descripcionFalla.trim(),
+  imagen_producto_url: imagenProductoUrl,
+  email: form.email.trim(),
+  estado: 'Ingresado',
+}
 
       const { error } = await supabase.from('devoluciones').insert(payload)
 
