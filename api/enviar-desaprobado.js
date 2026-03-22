@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
     console.log('BODY enviar-desaprobado:', req.body)
 
-    const subject = `Actualización de su caso #${id}`
+    const subject = `Actualización de su caso #${tracking_id}`
 
     const html = `
       <p>Estimado cliente,</p>
@@ -24,13 +24,13 @@ export default async function handler(req, res) {
       <p><strong>Producto:</strong> ${producto || ''} ${modelo || ''}</p>
 
       <p>Saludos cordiales.</p>
-      <p><strong>TempTech</strong></p>
+      <p><strong>TEMPTECH</strong></p>
     `
 
     const result = await resend.emails.send({
-      from: 'TempTech <notificaciones@temptech.com.ar>',
+      from: 'TEMPTECH <notificaciones@TEMPTECH.com.ar>',
       to: [email],
-      cc: ['notificaciones@temptech.com.ar'],
+      cc: ['notificaciones@TEMPTECH.com.ar'],
       subject,
       html,
     })

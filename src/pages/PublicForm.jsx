@@ -283,13 +283,27 @@ console.log('ANON KEY OK:', !!import.meta.env.VITE_SUPABASE_ANON_KEY)
   'alta-reclamo-email',
   {
     body: {
-      email: form.email.trim(),
-      nombre: form.nombreApellido.trim(),
-      producto: form.producto,
-      modelo: form.modelo,
-      descripcion: form.descripcionFalla.trim(),
-      trackingId: id,
-    },
+  email: form.email.trim(),
+  nombre: form.nombreApellido.trim(),
+  trackingId: id,
+  fechaIngreso: form.fechaIngreso,
+  direccion: form.direccion.trim(),
+  localidad: form.localidad.trim(),
+  provincia: form.provincia,
+  codigoPostal: form.codigoPostal.trim(),
+  telefono: form.telefono.trim(),
+  fechaCompra: form.fechaCompra || null,
+  canal: form.canal || null,
+  vendedor: form.vendedor.trim() || null,
+  ventaManual: form.ventaManual.trim() || null,
+  producto: form.producto,
+  modelo: form.modelo,
+  motivo: form.motivo,
+  descripcion: form.descripcionFalla.trim(),
+  diasGarantia: diasGarantia,
+  comprobanteUrl: comprobanteUrl,
+  imagenProductoUrl: imagenProductoUrl,
+},
   }
 )
 
@@ -331,7 +345,7 @@ if (emailError) {
           boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
         }}
       >
-        <h1 style={{ margin: 0, fontSize: 30 }}>Portal de devoluciones TempTech</h1>
+        <h1 style={{ margin: 0, fontSize: 30 }}>Portal de devoluciones TEMPTECH</h1>
         <p style={{ marginTop: 8, color: '#6b7280' }}>
           Carga inicial de reclamos con adjuntos, ID automático y registro en base de datos.
         </p>

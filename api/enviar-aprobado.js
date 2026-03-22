@@ -37,7 +37,7 @@ export default async function handler(req, res) {
         <p>Estimado cliente${nombre ? ' ' + nombre : ''}${apellido ? ' ' + apellido : ''},</p>
 
         <p>
-          Le comunicamos que su proceso fue revisado por nuestro equipo y el mismo fue
+          Le comunicamos que su proceso ${tracking_id ? ' ' + tracking_id : ''} fue revisado por nuestro equipo y el mismo fue
           <b>Aprobado</b>.
           Esto quiere decir que la información cargada se encuentra completa y en condiciones.
           A la brevedad nos estaremos comunicando para brindarle novedades para su resolución.
