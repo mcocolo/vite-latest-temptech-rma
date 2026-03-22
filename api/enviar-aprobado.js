@@ -19,8 +19,9 @@ export default async function handler(req, res) {
     const to = (req.body?.to || '').trim()
     const nombre = (req.body?.nombre || '').trim()
     const apellido = (req.body?.apellido || '').trim()
+    const tracking_id = (req.body?.tracking_id || '').trim()
 
-    console.log('Datos limpios:', { to, nombre, apellido })
+    console.log('Datos limpios:', { to, nombre, apellido, tracking_id })
 
     if (!to) {
       console.log('Falta email del destinatario')
@@ -37,7 +38,7 @@ export default async function handler(req, res) {
         <p>Estimado cliente${nombre ? ' ' + nombre : ''}${apellido ? ' ' + apellido : ''},</p>
 
         <p>
-          Le comunicamos que su proceso ${tracking_id ? ' ' + tracking_id : ''} fue revisado por nuestro equipo y el mismo fue
+          Le comunicamos que su proceso${tracking_id ? ' ' + tracking_id : ''} fue revisado por nuestro equipo y el mismo fue
           <b>Aprobado</b>.
           Esto quiere decir que la información cargada se encuentra completa y en condiciones.
           A la brevedad nos estaremos comunicando para brindarle novedades para su resolución.

@@ -161,16 +161,17 @@ export default function AdminList() {
       }
 
       const response = await fetch('/api/enviar-desaprobado', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: item.id,
-          email: item.email,
-          nombre: item.nombre_apellido || item.nombre || '',
-          producto: item.producto,
-          modelo: item.modelo,
-        }),
-      })
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    id: item.id,
+    email: item.email,
+    nombre: item.nombre_apellido || item.nombre || '',
+    producto: item.producto,
+    modelo: item.modelo,
+    tracking_id: item.tracking_id || '', // 👈 CLAVE
+  }),
+})
 
       const data = await response.json().catch(() => ({}))
       console.log('email desaprobado:', data)

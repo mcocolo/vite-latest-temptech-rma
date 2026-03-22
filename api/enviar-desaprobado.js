@@ -8,18 +8,30 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { id, email, nombre, producto, modelo } = req.body
-
     console.log('BODY enviar-desaprobado:', req.body)
 
-    const subject = `Actualización de su caso #${tracking_id}`
+    const email = (req.body?.email || '').trim()
+    const nombre = (req.body?.nombre || '').trim()
+    const producto = (req.body?.producto || '').trim()
+    const modelo = (req.body?.modelo || '').trim()
+    const tracking_id = (req.body?.tracking_id || '').trim()
+
+    if (!email) {
+      return res.status(400).json({ error: 'Falta email' })
+    }
+
+    const subject = `Actualización de su caso${tracking_id ? ' #' + tracking_id : ''}`
 
     const html = `
-      <p>Estimado cliente,</p>
+      <p>Estimado cliente${nombre ? ' ' + nombre : ''},</p>
 
-      <p>Su caso no fue aprobado debido a algún faltante de información adjuntada.</p>
+      <p>
+        Su caso${tracking_id ? ' ' + tracking_id : ''} no fue aprobado debido a algún faltante de información adjuntada.
+      </p>
 
-      <p>Le solicitamos verificar la documentación enviada y volver a cargar la solicitud con la información completa.</p>
+      <p>
+        Le solicitamos verificar la documentación enviada y volver a cargar la solicitud con la información completa.
+      </p>
 
       <p><strong>Producto:</strong> ${producto || ''} ${modelo || ''}</p>
 
@@ -27,17 +39,25 @@ export default async function handler(req, res) {
       <p><strong>TEMPTECH</strong></p>
     `
 
-    const result = await resend.emails.send({
-      from: 'TEMPTECH <notificaciones@TEMPTECH.com.ar>',
+    const { data, error } = await resend.emails.send({
+      from: 'TEMPTECH <notificaciones@temptech.com.ar>',
       to: [email],
-      cc: ['notificaciones@TEMPTECH.com.ar'],
+      cc: ['notificaciones@temptech.com.ar'],
       subject,
       html,
     })
 
-    console.log('EMAIL DESAPROBADO OK:', result)
+    console.log('EMAIL DESAPROBADO OK:', data)
+    console.log('ERROR RESEND:', error)
 
-    return res.status(200).json({ ok: true })
+    if (error) {
+      return res.status(500).json({
+        ok: false,
+        error: error.message || JSON.stringify(error),
+      })
+    }
+
+    return res.status(200).json({ ok: true, data })
 
   } catch (error) {
     console.error('ERROR enviar-desaprobado:', error)
