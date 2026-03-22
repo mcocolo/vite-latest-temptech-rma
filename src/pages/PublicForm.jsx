@@ -244,8 +244,7 @@ if (form.fechaCompra && form.fechaIngreso) {
     )
   }
 }
-console.log('diasGarantia:', diasGarantia)
-console.log('payload:', payload)
+
       const payload = {
   tracking_id: id,
   fecha_ingreso: form.fechaIngreso,
