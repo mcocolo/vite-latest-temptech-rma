@@ -31,7 +31,14 @@ export default function AdminList() {
   const [empresaEnvio, setEmpresaEnvio] = useState('Correo Argentino')
   const [codigoSeguimiento, setCodigoSeguimiento] = useState('')
   const [fechaEnvio, setFechaEnvio] = useState('')
+    // 👇 ACA VA EL FILTRO
+  const datosFiltrados = datos.filter((item) => {
+    if (!busquedaTracking) return true
 
+    return item.tracking_id
+      ?.toLowerCase()
+      .includes(busquedaTracking.toLowerCase())
+  })
   async function cargar() {
     setCargando(true)
     setErrorTexto('')
@@ -365,7 +372,27 @@ Fecha de envío: ${fechaEnvio}`
           <option value="cerrado">Cerrado</option>
         </select>
       </div>
+<div style={{ marginBottom: 20 }}>
+  <input
+    type="text"
+    placeholder="Buscar por tracking..."
+    value={busquedaTracking}
+    onChange={(e) => setBusquedaTracking(e.target.value)}
+    style={{
+      padding: 8,
+      width: 250,
+      borderRadius: 6,
+      border: '1px solid #ccc'
+    }}
+  />
 
+  <button
+    onClick={() => setBusquedaTracking('')}
+    style={{ marginLeft: 10 }}
+  >
+    Limpiar
+  </button>
+</div>
       {errorTexto && (
         <div style={{ marginBottom: 20, color: 'red', fontWeight: 'bold' }}>
           Error: {errorTexto}
@@ -378,7 +405,8 @@ Fecha de envío: ${fechaEnvio}`
         <p>No hay reclamos para mostrar.</p>
       ) : (
         <div style={{ display: 'grid', gap: 16 }}>
-          {datosFiltrados.map((item) => (
+          
+          {datos.map((item) => (
             <div
               key={item.id}
               style={{
@@ -632,20 +660,7 @@ Fecha de envío: ${fechaEnvio}`
                     Cerrar
                   </button>
                 </div>
-<div style={{ marginBottom: 20 }}>
-  <input
-    type="text"
-    placeholder="Buscar por tracking..."
-    value={busquedaTracking}
-    onChange={(e) => setBusquedaTracking(e.target.value)}
-    style={{
-      padding: 8,
-      width: 250,
-      borderRadius: 6,
-      border: '1px solid #ccc'
-    }}
-  />
-</div>
+
                 {rechazoAbiertoId === item.id && (
                   <div
                     style={{
