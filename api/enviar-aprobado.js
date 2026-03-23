@@ -35,10 +35,10 @@ export default async function handler(req, res) {
       to: [to],
       subject: 'TEMPTECH - Solicitud aprobada',
       html: `
-        <p>Estimado ${nombre ? ' ' + nombre : ''}${apellido ? ' ' + apellido : ''},</p>
+        <p>Estimado/a ${nombre ? ' ' + nombre : ''}${apellido ? ' ' + apellido : ''},</p>
 
         <p>
-          Le comunicamos que su proceso${tracking_id ? ' ' + tracking_id : ''} fue revisado por nuestro equipo y el mismo fue
+          Le comunicamos que su proceso<strong>${tracking_id || ""}</strong>. fue revisado por nuestro equipo y el mismo fue
           <b>Aprobado</b>.
           Esto quiere decir que la información cargada se encuentra completa y en condiciones.
           A la brevedad nos estaremos comunicando para brindarle novedades para su resolución.

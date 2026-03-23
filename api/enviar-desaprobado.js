@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     const subject = `Actualización de su caso${tracking_id ? ' #' + tracking_id : ''}`
 
     const html = `
-      <p>Estimado cliente${nombre ? ' ' + nombre : ''},</p>
+      <p>Estimado/a ${nombre ? ' ' + nombre : ''},</p>
 
       <p>
         Su caso${tracking_id ? ' ' + tracking_id : ''} no fue aprobado debido a algún faltante de información adjuntada.
