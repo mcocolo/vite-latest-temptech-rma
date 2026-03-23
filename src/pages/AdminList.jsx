@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import * as XLSX from 'xlsx'
+import * as XLSX from 'xlsx-js-style'
 function formatearFecha(fecha) {
   if (!fecha) return '-'
   const d = new Date(fecha)
@@ -105,17 +105,19 @@ async function exportarExcel() {
     const filas = (data || []).map((item) => ({
       ID: item.id || '',
       Tracking: item.tracking_id || '',
-      'Fecha ingreso': item.fecha_ingreso || '',
-      'Fecha creación': item.fecha_creacion || '',
-      'Nombre y apellido': item.nombre_apellido || '',
+      Estado: item.estado || '',
+      Aprobado: item.aprobado || '',
+      'Fecha ingreso': item.fecha_ingreso ? formatearFecha(item.fecha_ingreso) : '',
+      'Fecha creación': item.fecha_creacion ? formatearFecha(item.fecha_creacion) : '',
+      'Fecha compra': item.fecha_compra ? formatearFecha(item.fecha_compra) : '',
+      'Días garantía': item.dias_garantia ?? '',
+      Cliente: item.nombre_apellido || item.nombre || '',
       Dirección: item.direccion || '',
       Localidad: item.localidad || '',
       Provincia: item.provincia || '',
       'Código postal': item.codigo_postal || '',
       Teléfono: item.telefono || '',
       Email: item.email || '',
-      'Fecha compra': item.fecha_compra || '',
-      'Días garantía': item.dias_garantia ?? '',
       Canal: item.canal || '',
       Vendedor: item.vendedor || '',
       'Número venta manual': item.numero_venta_manual || '',
@@ -123,28 +125,80 @@ async function exportarExcel() {
       Modelo: item.modelo || '',
       Motivo: item.motivo || '',
       'Descripción falla': item.descripcion_falla || '',
-      Estado: item.estado || '',
-      Aprobado: item.aprobado || '',
-      'Fecha aprobado': item.fecha_aprobado || '',
-      'Fecha desaprobado': item.fecha_desaprobado || '',
+      Garantía: item.garantia || '',
+      'Fecha aprobado': item.fecha_aprobado ? formatearFecha(item.fecha_aprobado) : '',
+      'Fecha desaprobado': item.fecha_desaprobado ? formatearFecha(item.fecha_desaprobado) : '',
       'Motivo rechazo': item.motivo_rechazo || '',
       Notas: item.notas || '',
       'Empresa envío': item.empresa_envio || '',
       'Código seguimiento': item.codigo_seguimiento || '',
-      'Fecha envío': item.fecha_envio || '',
-      'Fecha resolución': item.fecha_resolucion || '',
+      'Fecha envío': item.fecha_envio ? formatearFecha(item.fecha_envio) : '',
+      'Fecha resolución': item.fecha_resolucion ? formatearFecha(item.fecha_resolucion) : '',
       'Comprobante URL': item.comprobante_url || '',
       'Imagen producto URL': item.imagen_producto_url || '',
     }))
 
     const ws = XLSX.utils.json_to_sheet(filas)
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Reclamos')
 
-    XLSX.writeFile(
-      wb,
-      `reclamos_temptech_${new Date().toISOString().slice(0, 10)}.xlsx`
-    )
+    ws['!cols'] = [
+      { wch: 8 },   // ID
+      { wch: 22 },  // Tracking
+      { wch: 14 },  // Estado
+      { wch: 12 },  // Aprobado
+      { wch: 20 },  // Fecha ingreso
+      { wch: 20 },  // Fecha creación
+      { wch: 20 },  // Fecha compra
+      { wch: 14 },  // Días garantía
+      { wch: 28 },  // Cliente
+      { wch: 32 },  // Dirección
+      { wch: 18 },  // Localidad
+      { wch: 18 },  // Provincia
+      { wch: 14 },  // Código postal
+      { wch: 18 },  // Teléfono
+      { wch: 30 },  // Email
+      { wch: 18 },  // Canal
+      { wch: 20 },  // Vendedor
+      { wch: 20 },  // Número venta manual
+      { wch: 24 },  // Producto
+      { wch: 20 },  // Modelo
+      { wch: 24 },  // Motivo
+      { wch: 40 },  // Descripción falla
+      { wch: 14 },  // Garantía
+      { wch: 20 },  // Fecha aprobado
+      { wch: 20 },  // Fecha desaprobado
+      { wch: 30 },  // Motivo rechazo
+      { wch: 60 },  // Notas
+      { wch: 20 },  // Empresa envío
+      { wch: 22 },  // Código seguimiento
+      { wch: 20 },  // Fecha envío
+      { wch: 20 },  // Fecha resolución
+      { wch: 50 },  // Comprobante URL
+      { wch: 50 },  // Imagen producto URL
+    ]
+
+    const range = XLSX.utils.decode_range(ws['!ref'])
+    ws['!autofilter'] = { ref: ws['!ref'] }
+
+   for (let col = range.s.c; col <= range.e.c; col++) {
+  const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col })
+  if (!ws[cellAddress]) continue
+
+  ws[cellAddress].s = {
+    font: { bold: true, color: { rgb: 'FFFFFF' } },
+    fill: { fgColor: { rgb: '1F4E78' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: {
+      top: { style: 'thin', color: { rgb: 'D9D9D9' } },
+      bottom: { style: 'thin', color: { rgb: 'D9D9D9' } },
+      left: { style: 'thin', color: { rgb: 'D9D9D9' } },
+      right: { style: 'thin', color: { rgb: 'D9D9D9' } },
+    },
+  }
+}
+
+   const wb = XLSX.utils.book_new()
+XLSX.utils.book_append_sheet(wb, ws, 'Reclamos')
+XLSX.writeFile(wb, `reclamos_temptech_${new Date().toISOString().slice(0, 10)}.xlsx`)
   } catch (err) {
     console.error('Error exportando Excel:', err)
     alert('Error al exportar el Excel')
