@@ -399,7 +399,7 @@ if (emailError) {
       border: '1px solid #d1d5db',
       backgroundColor: '#f3f4f6',
       color: '#374151',
-      width: '100%',
+      width: '220px',
     }}
   />
 </div>
