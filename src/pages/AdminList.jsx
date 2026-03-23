@@ -364,6 +364,27 @@ Fecha de envío: ${fechaEnvio}`
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value)}
         >
+          <div style={{ marginBottom: 20 }}>
+  <input
+    type="text"
+    placeholder="Buscar por tracking..."
+    value={busquedaTracking}
+    onChange={(e) => setBusquedaTracking(e.target.value)}
+    style={{
+      padding: 8,
+      width: 250,
+      borderRadius: 6,
+      border: '1px solid #ccc'
+    }}
+  />
+
+  <button
+    onClick={() => setBusquedaTracking('')}
+    style={{ marginLeft: 10 }}
+  >
+    Limpiar
+  </button>
+</div>
           <option value="todos">Todos</option>
           <option value="Ingresado">Ingresado</option>
           <option value="pendiente">Pendiente</option>
@@ -406,7 +427,7 @@ Fecha de envío: ${fechaEnvio}`
       ) : (
         <div style={{ display: 'grid', gap: 16 }}>
           
-          {datos.map((item) => (
+         {datosFiltrados.map((item) => (
             <div
               key={item.id}
               style={{
