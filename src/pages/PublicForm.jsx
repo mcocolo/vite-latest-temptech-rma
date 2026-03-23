@@ -387,19 +387,19 @@ if (emailError) {
             gap: 16,
           }}
         >
-      <div>
-  <label>Fecha ingreso</label>
+ <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+  <label style={{ fontWeight: 500 }}>Fecha ingreso</label>
   <input
-    type="date"
-    value={form.fechaIngreso}
+    type="text"
+    value={form.fechaIngreso.split('-').reverse().join('/')}
     readOnly
     style={{
-      width: '70%',
       padding: '12px 14px',
       borderRadius: 10,
       border: '1px solid #d1d5db',
       backgroundColor: '#f3f4f6',
       color: '#374151',
+      width: '100%',
     }}
   />
 </div>
