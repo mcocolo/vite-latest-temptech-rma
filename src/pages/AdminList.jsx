@@ -623,22 +623,9 @@ Fecha de envío: ${fechaEnvio}`
                   <strong>Tracking:</strong> {item.tracking_id || '-'}
                 </div>
 
-               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-  <label>Fecha de ingreso</label>
-  <input
-    type="date"
-    value={form.fechaIngreso}
-    readOnly
-    disabled
-    style={{
-      padding: '12px 14px',
-      borderRadius: 10,
-      border: '1px solid #d1d5db',
-      backgroundColor: '#f3f4f6',
-      color: '#374151',
-    }}
-  />
-</div>
+                <div style={{ marginBottom: 6 }}>
+                  <strong>Fecha ingreso:</strong> {formatearFecha(item.fecha_ingreso)}
+                </div>
 
                 <div style={{ marginBottom: 6 }}>
                   <strong>Fecha creación:</strong> {formatearFecha(item.fecha_creacion)}
