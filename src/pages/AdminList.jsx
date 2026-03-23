@@ -640,7 +640,11 @@ Fecha de envío: ${fechaEnvio}`
                 <div style={{ marginBottom: 6 }}>
                   <strong>Aprobado:</strong> {item.aprobado || 'NO'}
                 </div>
-
+<div style={{ marginBottom: 20 }}>
+  <button onClick={exportarExcel}>
+    Exportar Excel
+  </button>
+</div>
                 <div style={{ marginBottom: 6 }}>
                   <strong>Fecha aprobado:</strong> {formatearFecha(item.fecha_aprobado)}
                 </div>
