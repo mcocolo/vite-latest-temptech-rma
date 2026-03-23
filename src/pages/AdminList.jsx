@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-
+import * as XLSX from 'xlsx'
 function formatearFecha(fecha) {
   if (!fecha) return '-'
   const d = new Date(fecha)
@@ -88,7 +88,69 @@ export default function AdminList() {
   useEffect(() => {
     cargar()
   }, [filtroEstado])
+//Función para Exportar XLS
+async function exportarExcel() {
+  try {
+    const { data, error } = await supabase
+      .from('devoluciones')
+      .select('*')
+      .order('fecha_creacion', { ascending: false })
 
+    if (error) {
+      console.error('Error exportando:', error)
+      alert('No se pudo exportar el Excel')
+      return
+    }
+
+    const filas = (data || []).map((item) => ({
+      ID: item.id || '',
+      Tracking: item.tracking_id || '',
+      'Fecha ingreso': item.fecha_ingreso || '',
+      'Fecha creación': item.fecha_creacion || '',
+      'Nombre y apellido': item.nombre_apellido || '',
+      Dirección: item.direccion || '',
+      Localidad: item.localidad || '',
+      Provincia: item.provincia || '',
+      'Código postal': item.codigo_postal || '',
+      Teléfono: item.telefono || '',
+      Email: item.email || '',
+      'Fecha compra': item.fecha_compra || '',
+      'Días garantía': item.dias_garantia ?? '',
+      Canal: item.canal || '',
+      Vendedor: item.vendedor || '',
+      'Número venta manual': item.numero_venta_manual || '',
+      Producto: item.producto || '',
+      Modelo: item.modelo || '',
+      Motivo: item.motivo || '',
+      'Descripción falla': item.descripcion_falla || '',
+      Estado: item.estado || '',
+      Aprobado: item.aprobado || '',
+      'Fecha aprobado': item.fecha_aprobado || '',
+      'Fecha desaprobado': item.fecha_desaprobado || '',
+      'Motivo rechazo': item.motivo_rechazo || '',
+      Notas: item.notas || '',
+      'Empresa envío': item.empresa_envio || '',
+      'Código seguimiento': item.codigo_seguimiento || '',
+      'Fecha envío': item.fecha_envio || '',
+      'Fecha resolución': item.fecha_resolucion || '',
+      'Comprobante URL': item.comprobante_url || '',
+      'Imagen producto URL': item.imagen_producto_url || '',
+    }))
+
+    const ws = XLSX.utils.json_to_sheet(filas)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Reclamos')
+
+    XLSX.writeFile(
+      wb,
+      `reclamos_temptech_${new Date().toISOString().slice(0, 10)}.xlsx`
+    )
+  } catch (err) {
+    console.error('Error exportando Excel:', err)
+    alert('Error al exportar el Excel')
+  }
+}
+//Fin funcion Exportar XLS
   async function cambiarEstado(item, nuevoEstado) {
     if (item.estado === 'cerrado' && nuevoEstado !== 'cerrado') {
       return
@@ -427,7 +489,7 @@ Fecha de envío: ${fechaEnvio}`
           <option value="cerrado">Cerrado</option>
         </select>
       </div>
-
+<div style={{ marginBottom: 20 }}></div>
       <div style={{ marginBottom: 20 }}>
         <input
           type="text"
