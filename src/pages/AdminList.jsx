@@ -31,7 +31,7 @@ export default function AdminList() {
   const [empresaEnvio, setEmpresaEnvio] = useState('Correo Argentino')
   const [codigoSeguimiento, setCodigoSeguimiento] = useState('')
   const [fechaEnvio, setFechaEnvio] = useState('')
-    // 👇 ACA VA EL FILTRO
+
   const datosFiltrados = datos.filter((item) => {
     if (!busquedaTracking) return true
 
@@ -39,6 +39,26 @@ export default function AdminList() {
       ?.toLowerCase()
       .includes(busquedaTracking.toLowerCase())
   })
+
+  function armarLineaNota(tipo, texto) {
+    const ahora = new Date()
+    const fecha = ahora.toLocaleString('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+
+    return `${fecha} - ${tipo}: ${texto || ''}`.trim()
+  }
+
+  function unirNotas(notasActuales, nuevaLinea) {
+    if (!notasActuales || !notasActuales.trim()) return nuevaLinea
+    return `${notasActuales}\n${nuevaLinea}`
+  }
+
   async function cargar() {
     setCargando(true)
     setErrorTexto('')
@@ -70,6 +90,10 @@ export default function AdminList() {
   }, [filtroEstado])
 
   async function cambiarEstado(item, nuevoEstado) {
+    if (item.estado === 'cerrado' && nuevoEstado !== 'cerrado') {
+      return
+    }
+
     const payload = { estado: nuevoEstado }
 
     if (nuevoEstado !== 'rechazado') {
@@ -91,11 +115,18 @@ export default function AdminList() {
   }
 
   async function marcarAprobado(item) {
+    const texto = window.prompt('Nota para APROBADO:', '')
+    if (texto === null) return
+
+    const nuevaNota = armarLineaNota('APROBADO', texto)
+
     const payload = {
       aprobado: 'SI',
       estado: 'pendiente',
       fecha_aprobado: new Date().toISOString(),
+      fecha_desaprobado: null,
       motivo_rechazo: null,
+      notas: unirNotas(item.notas, nuevaNota),
     }
 
     const { error } = await supabase
@@ -110,21 +141,14 @@ export default function AdminList() {
     }
 
     try {
-      console.log('APROBANDO CASO:', {
-        to: (item.email || '').trim(),
-        nombre: item.nombre_apellido || item.nombre || '',
-        apellido: '',
-      })
-
       const resp = await fetch('/api/enviar-aprobado', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: (item.email || '').trim(),
           nombre: item.nombre_apellido || item.nombre || '',
           apellido: '',
+          tracking_id: item.tracking_id || '',
         }),
       })
 
@@ -144,23 +168,23 @@ export default function AdminList() {
 
   async function handleDesaprobar(item) {
     try {
-      console.log('DESAPROBAR:', item)
+      if (item.estado === 'cerrado') return
 
       if (!item?.id) {
         alert('No se encontró el caso')
         return
       }
 
-  const { error } = await supabase
-  .from('devoluciones')
-  .update({
-    estado: 'Ingresado',
-    aprobado: 'NO',
-    fecha_aprobado: null,
-    fecha_desaprobado: new Date().toISOString(),
-    motivo_rechazo: null,
-  })
-  .eq('id', item.id)
+      const { error } = await supabase
+        .from('devoluciones')
+        .update({
+          estado: 'Ingresado',
+          aprobado: 'NO',
+          fecha_aprobado: null,
+          fecha_desaprobado: new Date().toISOString(),
+          motivo_rechazo: null,
+        })
+        .eq('id', item.id)
 
       if (error) {
         console.error('Error al desaprobar:', error)
@@ -169,17 +193,17 @@ export default function AdminList() {
       }
 
       const response = await fetch('/api/enviar-desaprobado', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    id: item.id,
-    email: item.email,
-    nombre: item.nombre_apellido || item.nombre || '',
-    producto: item.producto,
-    modelo: item.modelo,
-    tracking_id: item.tracking_id || '', // 👈 CLAVE
-  }),
-})
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: item.id,
+          email: item.email,
+          nombre: item.nombre_apellido || item.nombre || '',
+          producto: item.producto,
+          modelo: item.modelo,
+          tracking_id: item.tracking_id || '',
+        }),
+      })
 
       const data = await response.json().catch(() => ({}))
       console.log('email desaprobado:', data)
@@ -198,6 +222,8 @@ export default function AdminList() {
   }
 
   async function rechazarCaso(item) {
+    if (item.estado === 'cerrado') return
+
     if (!textoRechazo || !textoRechazo.trim()) {
       alert('Ingresá el motivo del rechazo')
       return
@@ -273,12 +299,12 @@ Fecha de envío: ${fechaEnvio}`
       const { data, error } = await supabase.functions.invoke('enviar-email-resolucion', {
         body: {
           to: String(item.email || '').trim(),
-    subject: `TEMPTECH - Resolución de reclamo ${item.tracking_id}`,
-    text: cuerpo,
-    tracking_id: item.tracking_id || '',
-    empresa: empresaEnvio,
-    tracking: empresaEnvio === 'Logistica Propia' ? '' : codigoSeguimiento,
-    fecha: empresaEnvio === 'Logistica Propia' ? fechaEnvio : '',
+          subject: `TEMPTECH - Resolución de reclamo ${item.tracking_id}`,
+          text: cuerpo,
+          tracking_id: item.tracking_id || '',
+          empresa: empresaEnvio,
+          tracking: empresaEnvio === 'Logistica Propia' ? '' : codigoSeguimiento,
+          fecha: empresaEnvio === 'Logistica Propia' ? fechaEnvio : '',
         },
       })
 
@@ -315,6 +341,11 @@ Fecha de envío: ${fechaEnvio}`
       return
     }
 
+    const texto = window.prompt('Nota para RESOLUCION:', '')
+    if (texto === null) return
+
+    const nuevaNota = armarLineaNota('RESOLUCION', texto)
+
     try {
       const { error } = await supabase
         .from('devoluciones')
@@ -324,6 +355,7 @@ Fecha de envío: ${fechaEnvio}`
           codigo_seguimiento: empresaEnvio === 'Logistica Propia' ? null : codigoSeguimiento,
           fecha_envio: empresaEnvio === 'Logistica Propia' ? fechaEnvio : null,
           fecha_resolucion: new Date().toISOString(),
+          notas: unirNotas(item.notas, nuevaNota),
         })
         .eq('id', item.id)
 
@@ -354,6 +386,29 @@ Fecha de envío: ${fechaEnvio}`
     }
   }
 
+  async function cerrarCaso(item) {
+    const texto = window.prompt('Nota para CERRAR:', '')
+    if (texto === null) return
+
+    const nuevaNota = armarLineaNota('CERRADO', texto)
+
+    const { error } = await supabase
+      .from('devoluciones')
+      .update({
+        estado: 'cerrado',
+        notas: unirNotas(item.notas, nuevaNota),
+      })
+      .eq('id', item.id)
+
+    if (error) {
+      console.error('Error al cerrar caso:', error)
+      alert('No se pudo cerrar el caso')
+      return
+    }
+
+    await cargar()
+  }
+
   return (
     <div style={{ padding: 30, fontFamily: 'Arial, sans-serif' }}>
       <h1>Panel Admin - Reclamos</h1>
@@ -364,27 +419,6 @@ Fecha de envío: ${fechaEnvio}`
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value)}
         >
-          <div style={{ marginBottom: 20 }}>
-  <input
-    type="text"
-    placeholder="Buscar por tracking..."
-    value={busquedaTracking}
-    onChange={(e) => setBusquedaTracking(e.target.value)}
-    style={{
-      padding: 8,
-      width: 250,
-      borderRadius: 6,
-      border: '1px solid #ccc'
-    }}
-  />
-
-  <button
-    onClick={() => setBusquedaTracking('')}
-    style={{ marginLeft: 10 }}
-  >
-    Limpiar
-  </button>
-</div>
           <option value="todos">Todos</option>
           <option value="Ingresado">Ingresado</option>
           <option value="pendiente">Pendiente</option>
@@ -393,27 +427,29 @@ Fecha de envío: ${fechaEnvio}`
           <option value="cerrado">Cerrado</option>
         </select>
       </div>
-<div style={{ marginBottom: 20 }}>
-  <input
-    type="text"
-    placeholder="Buscar por tracking..."
-    value={busquedaTracking}
-    onChange={(e) => setBusquedaTracking(e.target.value)}
-    style={{
-      padding: 8,
-      width: 250,
-      borderRadius: 6,
-      border: '1px solid #ccc'
-    }}
-  />
 
-  <button
-    onClick={() => setBusquedaTracking('')}
-    style={{ marginLeft: 10 }}
-  >
-    Limpiar
-  </button>
-</div>
+      <div style={{ marginBottom: 20 }}>
+        <input
+          type="text"
+          placeholder="Buscar por tracking..."
+          value={busquedaTracking}
+          onChange={(e) => setBusquedaTracking(e.target.value)}
+          style={{
+            padding: 8,
+            width: 250,
+            borderRadius: 6,
+            border: '1px solid #ccc',
+          }}
+        />
+
+        <button
+          onClick={() => setBusquedaTracking('')}
+          style={{ marginLeft: 10 }}
+        >
+          Limpiar
+        </button>
+      </div>
+
       {errorTexto && (
         <div style={{ marginBottom: 20, color: 'red', fontWeight: 'bold' }}>
           Error: {errorTexto}
@@ -426,8 +462,7 @@ Fecha de envío: ${fechaEnvio}`
         <p>No hay reclamos para mostrar.</p>
       ) : (
         <div style={{ display: 'grid', gap: 16 }}>
-          
-         {datosFiltrados.map((item) => (
+          {datosFiltrados.map((item) => (
             <div
               key={item.id}
               style={{
@@ -547,18 +582,25 @@ Fecha de envío: ${fechaEnvio}`
                 <div style={{ marginBottom: 6 }}>
                   <strong>Fecha aprobado:</strong> {formatearFecha(item.fecha_aprobado)}
                 </div>
-<div style={{ marginBottom: 6 }}>
-  <strong>Fecha desaprobado:</strong> {formatearFecha(item.fecha_desaprobado)}
-</div>
+
+                <div style={{ marginBottom: 6 }}>
+                  <strong>Fecha desaprobado:</strong> {formatearFecha(item.fecha_desaprobado)}
+                </div>
 
                 <div style={{ marginBottom: 6 }}>
                   <strong>Garantía:</strong> {item.garantia || '-'}
                 </div>
-<div style={{ marginBottom: 6 }}>
-  <strong>Días garantía:</strong> {item.dias_garantia ?? '-'}
-</div>
+
+                <div style={{ marginBottom: 6 }}>
+                  <strong>Días garantía:</strong> {item.dias_garantia ?? '-'}
+                </div>
+
                 <div style={{ marginBottom: 6 }}>
                   <strong>Motivo rechazo:</strong> {item.motivo_rechazo || '-'}
+                </div>
+
+                <div style={{ marginBottom: 6, whiteSpace: 'pre-line' }}>
+                  <strong>Notas:</strong> {item.notas || '-'}
                 </div>
 
                 <div style={{ marginBottom: 6 }}>
@@ -631,7 +673,14 @@ Fecha de envío: ${fechaEnvio}`
                     flexWrap: 'wrap',
                   }}
                 >
-                  <button onClick={() => cambiarEstado(item, 'pendiente')}>
+                  <button
+                    onClick={() => cambiarEstado(item, 'pendiente')}
+                    disabled={item.estado === 'cerrado'}
+                    style={{
+                      opacity: item.estado === 'cerrado' ? 0.6 : 1,
+                      cursor: item.estado === 'cerrado' ? 'not-allowed' : 'pointer',
+                    }}
+                  >
                     Pendiente
                   </button>
 
@@ -659,10 +708,13 @@ Fecha de envío: ${fechaEnvio}`
 
                   <button
                     onClick={() => handleDesaprobar(item)}
-                    disabled={item.aprobado !== 'SI'}
+                    disabled={item.aprobado !== 'SI' || item.estado === 'cerrado'}
                     style={{
-                      opacity: item.aprobado !== 'SI' ? 0.6 : 1,
-                      cursor: item.aprobado !== 'SI' ? 'not-allowed' : 'pointer',
+                      opacity: item.aprobado !== 'SI' || item.estado === 'cerrado' ? 0.6 : 1,
+                      cursor:
+                        item.aprobado !== 'SI' || item.estado === 'cerrado'
+                          ? 'not-allowed'
+                          : 'pointer',
                     }}
                   >
                     Desaprobar
@@ -673,11 +725,16 @@ Fecha de envío: ${fechaEnvio}`
                       setRechazoAbiertoId(item.id)
                       setTextoRechazo(item.motivo_rechazo || '')
                     }}
+                    disabled={item.estado === 'cerrado'}
+                    style={{
+                      opacity: item.estado === 'cerrado' ? 0.6 : 1,
+                      cursor: item.estado === 'cerrado' ? 'not-allowed' : 'pointer',
+                    }}
                   >
                     Rechazar
                   </button>
 
-                  <button onClick={() => cambiarEstado(item, 'cerrado')}>
+                  <button onClick={() => cerrarCaso(item)}>
                     Cerrar
                   </button>
                 </div>
