@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import * as XLSX from 'xlsx-js-style'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../api/supabase'
 function formatearFecha(fecha) {
   if (!fecha) return '-'
   const d = new Date(fecha)
@@ -205,6 +208,19 @@ XLSX.writeFile(wb, `reclamos_temptech_${new Date().toISOString().slice(0, 10)}.x
   }
 }
 //Fin funcion Exportar XLS
+const navigate = useNavigate()
+
+useEffect(() => {
+  async function checkUser() {
+    const { data } = await supabase.auth.getSession()
+
+    if (!data.session) {
+      navigate('/login')
+    }
+  }
+
+  checkUser()
+}, [])
   async function cambiarEstado(item, nuevoEstado) {
     if (item.estado === 'cerrado' && nuevoEstado !== 'cerrado') {
       return
