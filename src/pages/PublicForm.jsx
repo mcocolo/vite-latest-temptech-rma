@@ -278,16 +278,30 @@ if (form.fechaCompra && form.fechaIngreso) {
       console.log('LLAMANDO FUNCION EMAIL')
 console.log('SUPABASE URL:', import.meta.env.VITE_SUPABASE_URL)
 console.log('ANON KEY OK:', !!import.meta.env.VITE_SUPABASE_ANON_KEY)
-      const { data: emailData, error: emailError } = await supabase.functions.invoke(
+const { data: emailData, error: emailError } = await supabase.functions.invoke(
   'alta-reclamo-email',
   {
     body: {
       email: form.email.trim(),
       nombre: form.nombreApellido.trim(),
+      trackingId: id,
+      fechaIngreso: form.fechaIngreso,
+      direccion: form.direccion.trim(),
+      localidad: form.localidad.trim(),
+      provincia: form.provincia,
+      codigoPostal: form.codigoPostal.trim(),
+      telefono: form.telefono.trim(),
+      fechaCompra: form.fechaCompra || null,
+      canal: form.canal || null,
+      vendedor: form.vendedor.trim() || null,
+      ventaManual: form.ventaManual.trim() || null,
       producto: form.producto,
       modelo: form.modelo,
+      motivo: form.motivo,
       descripcion: form.descripcionFalla.trim(),
-      trackingId: id,
+      diasGarantia: diasGarantia,
+      comprobanteUrl: comprobanteUrl,
+      imagenProductoUrl: imagenProductoUrl,
     },
   }
 )
