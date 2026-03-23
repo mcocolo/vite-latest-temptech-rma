@@ -247,7 +247,7 @@ if (form.fechaCompra && form.fechaIngreso) {
 
       const payload = {
   tracking_id: id,
-  fecha_ingreso: form.fechaIngreso,
+fecha_ingreso: hoy,
   nombre_apellido: form.nombreApellido.trim(),
   direccion: form.direccion.trim(),
   localidad: form.localidad.trim(),
@@ -268,7 +268,7 @@ if (form.fechaCompra && form.fechaIngreso) {
   email: form.email.trim(),
   estado: 'Ingresado',
 }
-
+const hoy = new Date().toISOString().slice(0, 10)
       const { error } = await supabase.from('devoluciones').insert(payload)
 
       if (error) {
@@ -390,12 +390,7 @@ if (emailError) {
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <label>Fecha ingreso</label>
-            <input
-              type="date"
-              value={form.fechaIngreso}
-              onChange={(e) => update('fechaIngreso', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            />
+        
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import * as XLSX from 'xlsx-js-style'
-function formatearFecha(fecha) {
+function formatearFechaHora(fecha) {
   if (!fecha) return '-'
+
   const d = new Date(fecha)
   if (isNaN(d.getTime())) return fecha
 
-  return d.toLocaleString('es-AR', {
+  return new Intl.DateTimeFormat('es-AR', {
     timeZone: 'America/Argentina/Buenos_Aires',
     year: 'numeric',
     month: '2-digit',
@@ -14,9 +15,30 @@ function formatearFecha(fecha) {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-  })
+    hour12: false,
+  }).format(d)
 }
 
+function formatearSoloFecha(fecha) {
+  if (!fecha) return '-'
+
+  if (typeof fecha === 'string' && fecha.length >= 10) {
+    const [anio, mes, dia] = fecha.slice(0, 10).split('-')
+    if (anio && mes && dia) {
+      return `${dia}/${mes}/${anio}`
+    }
+  }
+
+  const d = new Date(fecha)
+  if (isNaN(d.getTime())) return fecha
+
+  return new Intl.DateTimeFormat('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d)
+}
 export default function AdminList() {
   const [busquedaTracking, setBusquedaTracking] = useState('')
   const [datos, setDatos] = useState([])
@@ -107,8 +129,8 @@ async function exportarExcel() {
       Tracking: item.tracking_id || '',
       Estado: item.estado || '',
       Aprobado: item.aprobado || '',
-      'Fecha ingreso': item.fecha_ingreso ? formatearFecha(item.fecha_ingreso) : '',
-      'Fecha creación': item.fecha_creacion ? formatearFecha(item.fecha_creacion) : '',
+      'Fecha ingreso': item.fecha_ingreso ? formatearSoloFecha(item.fecha_ingreso) : '',
+      'Fecha creación': item.fecha_creacion ? formatearFechaHora(item.fecha_creacion) : '',
       'Fecha compra': item.fecha_compra ? formatearFecha(item.fecha_compra) : '',
       'Días garantía': item.dias_garantia ?? '',
       Cliente: item.nombre_apellido || item.nombre || '',
@@ -132,7 +154,7 @@ async function exportarExcel() {
       Notas: item.notas || '',
       'Empresa envío': item.empresa_envio || '',
       'Código seguimiento': item.codigo_seguimiento || '',
-      'Fecha envío': item.fecha_envio ? formatearFecha(item.fecha_envio) : '',
+      'Fecha envío': item.fecha_envio ? formatearSoloFecha(item.fecha_envio) : '',
       'Fecha resolución': item.fecha_resolucion ? formatearFecha(item.fecha_resolucion) : '',
       'Comprobante URL': item.comprobante_url || '',
       'Imagen producto URL': item.imagen_producto_url || '',
@@ -624,11 +646,11 @@ Fecha de envío: ${fechaEnvio}`
                 </div>
 
                 <div style={{ marginBottom: 6 }}>
-                  <strong>Fecha ingreso:</strong> {formatearFecha(item.fecha_ingreso)}
+                  <strong>Fecha ingreso:</strong> {formatearSoloFecha(item.fecha_ingreso)}
                 </div>
 
                 <div style={{ marginBottom: 6 }}>
-                  <strong>Fecha creación:</strong> {formatearFecha(item.fecha_creacion)}
+                  <strong>Fecha creación:</strong> {formatearFechaHora(item.fecha_creacion)}
                 </div>
 
                 <div style={{ marginBottom: 6 }}>
@@ -732,7 +754,7 @@ Fecha de envío: ${fechaEnvio}`
                 </div>
 
                 <div style={{ marginBottom: 6 }}>
-                  <strong>Fecha envío:</strong> {formatearFecha(item.fecha_envio)}
+                  <strong>Fecha envío:</strong> {formatearSoloFecha(item.fecha_envio)}
                 </div>
 
                 <div style={{ marginBottom: 6 }}>
