@@ -18,6 +18,7 @@ function formatearFecha(fecha) {
 }
 
 export default function AdminList() {
+  const [busquedaTracking, setBusquedaTracking] = useState('')
   const [datos, setDatos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtroEstado, setFiltroEstado] = useState('Ingresado')
@@ -377,7 +378,7 @@ Fecha de envío: ${fechaEnvio}`
         <p>No hay reclamos para mostrar.</p>
       ) : (
         <div style={{ display: 'grid', gap: 16 }}>
-          {datos.map((item) => (
+          {datosFiltrados.map((item) => (
             <div
               key={item.id}
               style={{
@@ -631,7 +632,20 @@ Fecha de envío: ${fechaEnvio}`
                     Cerrar
                   </button>
                 </div>
-
+<div style={{ marginBottom: 20 }}>
+  <input
+    type="text"
+    placeholder="Buscar por tracking..."
+    value={busquedaTracking}
+    onChange={(e) => setBusquedaTracking(e.target.value)}
+    style={{
+      padding: 8,
+      width: 250,
+      borderRadius: 6,
+      border: '1px solid #ccc'
+    }}
+  />
+</div>
                 {rechazoAbiertoId === item.id && (
                   <div
                     style={{
