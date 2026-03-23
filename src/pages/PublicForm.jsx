@@ -394,7 +394,7 @@ if (emailError) {
     value={form.fechaIngreso}
     readOnly
     style={{
-      width: '100%',
+      width: '70%',
       padding: '12px 14px',
       borderRadius: 10,
       border: '1px solid #d1d5db',
