@@ -213,124 +213,150 @@ export default function PublicForm() {
     return ''
   }
 
-  async function guardar(e) {
-    e.preventDefault()
-    setMensaje('')
-    setErrorMsg('')
+ async function guardar(e) {
+  e.preventDefault()
+  setMensaje('')
+  setErrorMsg('')
 
-    const validacion = validar()
-    if (validacion) {
-      setErrorMsg(validacion)
-      return
+  const validacion = validar()
+  if (validacion) {
+    setErrorMsg(validacion)
+    return
+  }
+
+  setGuardando(true)
+
+  try {
+    const id = generarTrackingId()
+    console.log('STEP 1 - ID generado:', id)
+
+    let comprobanteUrl = null
+    let imagenProductoUrl = null
+
+    if (comprobante) {
+      console.log('STEP 2 - Subiendo comprobante...')
+      try {
+        comprobanteUrl = await subirArchivo(comprobante, id, 'comprobantes')
+        console.log('STEP 2 OK - comprobanteUrl:', comprobanteUrl)
+      } catch (err) {
+        console.error('STEP 2 ERROR:', err)
+        alert('ERROR SUBIENDO COMPROBANTE:\n' + JSON.stringify(err, null, 2))
+        throw err
+      }
     }
 
-    setGuardando(true)
-
-    try {
-      const id = generarTrackingId()
-
-      const comprobanteUrl = await subirArchivo(comprobante, id, 'comprobantes')
-      const imagenProductoUrl = await subirArchivo(imagenProducto, id, 'productos')
-// 🔹 CALCULO DIAS GARANTIA
-let diasGarantia = null
-
-if (form.fechaCompra && form.fechaIngreso) {
-  const fechaCompra = new Date(form.fechaCompra)
-  const fechaReclamo = new Date(form.fechaIngreso)
-
-  if (!isNaN(fechaCompra.getTime()) && !isNaN(fechaReclamo.getTime())) {
-    diasGarantia = Math.floor(
-      (fechaReclamo - fechaCompra) / (1000 * 60 * 60 * 24)
-    )
-  }
-}
-      const payload = {
-        tracking_id: id,
-        fecha_ingreso: new Date().toISOString().slice(0, 10),
-        nombre_apellido: form.nombreApellido.trim(),
-        direccion: form.direccion.trim(),
-        localidad: form.localidad.trim(),
-        provincia: form.provincia,
-        codigo_postal: form.codigoPostal.trim(),
-        telefono: form.telefono.trim(),
-        fecha_compra: form.fechaCompra || null,
-        dias_garantia: diasGarantia,
-        canal: form.canal || null,
-        vendedor: form.vendedor.trim() || null,
-        numero_venta_manual: form.ventaManual.trim() || null,
-        comprobante_url: comprobanteUrl,
-        producto: form.producto,
-        modelo: form.modelo,
-        motivo: form.motivo,
-        descripcion_falla: form.descripcionFalla.trim(),
-        imagen_producto_url: imagenProductoUrl,
-        email: form.email.trim(),
-        estado: 'Ingresado',
+    if (imagenProducto) {
+      console.log('STEP 3 - Subiendo imagen producto...')
+      try {
+        imagenProductoUrl = await subirArchivo(imagenProducto, id, 'productos')
+        console.log('STEP 3 OK - imagenProductoUrl:', imagenProductoUrl)
+      } catch (err) {
+        console.error('STEP 3 ERROR:', err)
+        alert('ERROR SUBIENDO IMAGEN:\n' + JSON.stringify(err, null, 2))
+        throw err
       }
+    }
 
-      const { error } = await supabase.from('devoluciones').insert(payload)
+    let diasGarantia = null
+    if (form.fechaCompra && form.fechaIngreso) {
+      const fechaCompra = new Date(form.fechaCompra)
+      const fechaReclamo = new Date(form.fechaIngreso)
 
-      if (error) {
-        console.error('Error guardando reclamo:', error)
-        throw error
+      if (!isNaN(fechaCompra.getTime()) && !isNaN(fechaReclamo.getTime())) {
+        diasGarantia = Math.floor(
+          (fechaReclamo - fechaCompra) / (1000 * 60 * 60 * 24)
+        )
       }
+    }
 
-      console.log('LLAMANDO FUNCION EMAIL')
-console.log('SUPABASE URL:', import.meta.env.VITE_SUPABASE_URL)
-console.log('ANON KEY OK:', !!import.meta.env.VITE_SUPABASE_ANON_KEY)
-const { data: emailData, error: emailError } = await supabase.functions.invoke(
-  'alta-reclamo-email',
-  {
-    body: {
-      email: form.email.trim(),
-      nombre: form.nombreApellido.trim(),
-      trackingId: id,
-      fechaIngreso: form.fechaIngreso,
+    const payload = {
+      tracking_id: id,
+      fecha_ingreso: new Date().toISOString().slice(0, 10),
+      nombre_apellido: form.nombreApellido.trim(),
       direccion: form.direccion.trim(),
       localidad: form.localidad.trim(),
       provincia: form.provincia,
-      codigoPostal: form.codigoPostal.trim(),
+      codigo_postal: form.codigoPostal.trim(),
       telefono: form.telefono.trim(),
-      fechaCompra: form.fechaCompra || null,
+      fecha_compra: form.fechaCompra || null,
+      dias_garantia: diasGarantia,
       canal: form.canal || null,
       vendedor: form.vendedor.trim() || null,
-      ventaManual: form.ventaManual.trim() || null,
+      numero_venta_manual: form.ventaManual.trim() || null,
+      comprobante_url: comprobanteUrl,
       producto: form.producto,
       modelo: form.modelo,
       motivo: form.motivo,
-      descripcion: form.descripcionFalla.trim(),
-      diasGarantia: diasGarantia,
-      comprobanteUrl: comprobanteUrl,
-      imagenProductoUrl: imagenProductoUrl,
-    },
-  }
-)
-
-console.log('RESPUESTA FUNCION EMAIL:', emailData)
-console.log('ERROR FUNCION EMAIL:', emailError)
-
-if (emailError) {
-  console.error('Error enviando email:', emailError)
-  alert(`Error enviando email: ${emailError.message || JSON.stringify(emailError)}`)
-}
-
-
-
-      setTrackingId(id)
-      setMensaje(`Solicitud registrada correctamente. Tu ID de seguimiento es ${id}`)
-      setForm({
-        ...emptyForm,
-        fechaIngreso: new Date().toISOString().slice(0, 10),
-      })
-      setComprobante(null)
-      setImagenProducto(null)
-    } catch (err) {
-      console.error(err)
-      setErrorMsg(err?.message || 'No se pudo registrar la solicitud.')
-    } finally {
-      setGuardando(false)
+      descripcion_falla: form.descripcionFalla.trim(),
+      imagen_producto_url: imagenProductoUrl,
+      email: form.email.trim(),
+      estado: 'Ingresado',
     }
+
+    console.log('STEP 4 - INSERTANDO:', payload)
+
+    const { data, error } = await supabase
+      .from('devoluciones')
+      .insert([payload])
+      .select()
+
+    if (error) {
+      console.error('STEP 4 ERROR:', error)
+      alert('ERROR INSERT TABLA:\n' + JSON.stringify(error, null, 2))
+      throw error
+    }
+
+    console.log('STEP 4 OK:', data)
+
+    const { data: emailData, error: emailError } = await supabase.functions.invoke(
+      'alta-reclamo-email',
+      {
+        body: {
+          email: form.email.trim(),
+          nombre: form.nombreApellido.trim(),
+          trackingId: id,
+          fechaIngreso: form.fechaIngreso,
+          direccion: form.direccion.trim(),
+          localidad: form.localidad.trim(),
+          provincia: form.provincia,
+          codigoPostal: form.codigoPostal.trim(),
+          telefono: form.telefono.trim(),
+          fechaCompra: form.fechaCompra || null,
+          canal: form.canal || null,
+          vendedor: form.vendedor.trim() || null,
+          ventaManual: form.ventaManual.trim() || null,
+          producto: form.producto,
+          modelo: form.modelo,
+          motivo: form.motivo,
+          descripcion: form.descripcionFalla.trim(),
+          diasGarantia: diasGarantia,
+          comprobanteUrl: comprobanteUrl,
+          imagenProductoUrl: imagenProductoUrl,
+        },
+      }
+    )
+
+    console.log('STEP 5 emailData:', emailData)
+    console.log('STEP 5 emailError:', emailError)
+
+    setTrackingId(id)
+    setMensaje(`Solicitud registrada correctamente. Tu ID es ${id}`)
+
+    setForm({
+      ...emptyForm,
+      fechaIngreso: new Date().toISOString().slice(0, 10),
+    })
+
+    setComprobante(null)
+    setImagenProducto(null)
+
+  } catch (err) {
+    console.error('ERROR FINAL:', err)
+    setErrorMsg(err?.message || 'No se pudo registrar la solicitud.')
+  } finally {
+    setGuardando(false)
   }
+}
 
   return (
     <div style={{ minHeight: '100vh', background: '#f4f6f8', padding: 24, fontFamily: 'Arial, sans-serif' }}>
