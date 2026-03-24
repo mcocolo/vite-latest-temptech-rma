@@ -9,7 +9,14 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-
+  // 👇 Aca va esto
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        navigate('/admin')
+      }
+    })
+  }, [])
   
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -30,13 +37,7 @@ export default function Login() {
 
     navigate('/admin')
   }
-useEffect(() => {
-  supabase.auth.getSession().then(({ data }) => {
-    if (data.session) {
-      navigate('/admin')
-    }
-  })
-}, [])
+
   return (
     <div style={{ maxWidth: '400px', margin: '50px auto' }}>
       <h2>Login Admin</h2>
