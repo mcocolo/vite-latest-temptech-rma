@@ -252,7 +252,7 @@ export default function AdminList() {
 
     const payload = {
       aprobado: 'SI',
-      estado: 'pendiente',
+      estado: 'Pendiente',
       fecha_aprobado: new Date().toISOString(),
       fecha_desaprobado: null,
       motivo_rechazo: null,
