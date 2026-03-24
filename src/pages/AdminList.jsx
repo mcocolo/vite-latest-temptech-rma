@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import * as XLSX from 'xlsx-js-style'
 import { useNavigate } from 'react-router-dom'
-
 function formatearFecha(fecha) {
   if (!fecha) return '-'
   const d = new Date(fecha)
@@ -20,32 +19,27 @@ function formatearFecha(fecha) {
 }
 
 export default function AdminList() {
-  const navigate = useNavigate()
-
   const [busquedaTracking, setBusquedaTracking] = useState('')
   const [datos, setDatos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtroEstado, setFiltroEstado] = useState('Ingresado')
+  const [errorTexto, setErrorTexto] = useState('')
 
-  // 👇 DASHBOARD
-  const totalCasos = datos.length
-  const totalIngresado = datos.filter((item) => item.estado === 'Ingresado').length
-  const totalPendiente = datos.filter((item) => item.estado === 'Pendiente').length
-  const totalResolucion = datos.filter((item) => item.estado === 'Resolucion').length
-  const totalRechazado = datos.filter((item) => item.estado === 'rechazado').length
-  const totalCerrado = datos.filter((item) => item.estado === 'cerrado').length
-  const totalAprobados = datos.filter((item) => item.aprobado === 'SI').length
+  const [rechazoAbiertoId, setRechazoAbiertoId] = useState(null)
+  const [textoRechazo, setTextoRechazo] = useState('')
 
-  // 👇 FILTRO
-  const datosFiltrados = datos
-    .filter((item) => {
-      if (filtroEstado === 'todos') return true
-      return item.estado === filtroEstado
-    })
-    .filter((item) => {
-      if (!busquedaTracking) return true
-      return item.tracking_id?.toLowerCase().includes(busquedaTracking.toLowerCase())
-    })
+  const [resolucionAbiertaId, setResolucionAbiertaId] = useState(null)
+  const [empresaEnvio, setEmpresaEnvio] = useState('Correo Argentino')
+  const [codigoSeguimiento, setCodigoSeguimiento] = useState('')
+  const [fechaEnvio, setFechaEnvio] = useState('')
+
+  const datosFiltrados = datos.filter((item) => {
+    if (!busquedaTracking) return true
+
+    return item.tracking_id
+      ?.toLowerCase()
+      .includes(busquedaTracking.toLowerCase())
+  })
 
   function armarLineaNota(tipo, texto) {
     const ahora = new Date()
@@ -95,136 +89,136 @@ export default function AdminList() {
   useEffect(() => {
     cargar()
   }, [filtroEstado])
+//Función para Exportar XLS
+async function exportarExcel() {
+  try {
+    const { data, error } = await supabase
+      .from('devoluciones')
+      .select('*')
+      .order('fecha_creacion', { ascending: false })
 
-  useEffect(() => {
-    async function checkUser() {
-      const { data } = await supabase.auth.getSession()
-      if (!data.session) {
-        navigate('/login')
-      }
+    if (error) {
+      console.error('Error exportando:', error)
+      alert('No se pudo exportar el Excel')
+      return
     }
 
-    checkUser()
-  }, [navigate])
+    const filas = (data || []).map((item) => ({
+      ID: item.id || '',
+      Tracking: item.tracking_id || '',
+      Estado: item.estado || '',
+      Aprobado: item.aprobado || '',
+      'Fecha ingreso': item.fecha_ingreso ? formatearFecha(item.fecha_ingreso) : '',
+      'Fecha creación': item.fecha_creacion ? formatearFecha(item.fecha_creacion) : '',
+      'Fecha compra': item.fecha_compra ? formatearFecha(item.fecha_compra) : '',
+      'Días garantía': item.dias_garantia ?? '',
+      Cliente: item.nombre_apellido || item.nombre || '',
+      Dirección: item.direccion || '',
+      Localidad: item.localidad || '',
+      Provincia: item.provincia || '',
+      'Código postal': item.codigo_postal || '',
+      Teléfono: item.telefono || '',
+      Email: item.email || '',
+      Canal: item.canal || '',
+      Vendedor: item.vendedor || '',
+      'Número venta manual': item.numero_venta_manual || '',
+      Producto: item.producto || '',
+      Modelo: item.modelo || '',
+      Motivo: item.motivo || '',
+      'Descripción falla': item.descripcion_falla || '',
+      Garantía: item.garantia || '',
+      'Fecha aprobado': item.fecha_aprobado ? formatearFecha(item.fecha_aprobado) : '',
+      'Fecha desaprobado': item.fecha_desaprobado ? formatearFecha(item.fecha_desaprobado) : '',
+      'Motivo rechazo': item.motivo_rechazo || '',
+      Notas: item.notas || '',
+      'Empresa envío': item.empresa_envio || '',
+      'Código seguimiento': item.codigo_seguimiento || '',
+      'Fecha envío': item.fecha_envio ? formatearFecha(item.fecha_envio) : '',
+      'Fecha resolución': item.fecha_resolucion ? formatearFecha(item.fecha_resolucion) : '',
+      'Comprobante URL': item.comprobante_url || '',
+      'Imagen producto URL': item.imagen_producto_url || '',
+    }))
 
-  async function exportarExcel() {
-    try {
-      const { data, error } = await supabase
-        .from('devoluciones')
-        .select('*')
-        .order('fecha_creacion', { ascending: false })
+    const ws = XLSX.utils.json_to_sheet(filas)
 
-      if (error) {
-        console.error('Error exportando:', error)
-        alert('No se pudo exportar el Excel')
-        return
-      }
+    ws['!cols'] = [
+      { wch: 8 },   // ID
+      { wch: 22 },  // Tracking
+      { wch: 14 },  // Estado
+      { wch: 12 },  // Aprobado
+      { wch: 20 },  // Fecha ingreso
+      { wch: 20 },  // Fecha creación
+      { wch: 20 },  // Fecha compra
+      { wch: 14 },  // Días garantía
+      { wch: 28 },  // Cliente
+      { wch: 32 },  // Dirección
+      { wch: 18 },  // Localidad
+      { wch: 18 },  // Provincia
+      { wch: 14 },  // Código postal
+      { wch: 18 },  // Teléfono
+      { wch: 30 },  // Email
+      { wch: 18 },  // Canal
+      { wch: 20 },  // Vendedor
+      { wch: 20 },  // Número venta manual
+      { wch: 24 },  // Producto
+      { wch: 20 },  // Modelo
+      { wch: 24 },  // Motivo
+      { wch: 40 },  // Descripción falla
+      { wch: 14 },  // Garantía
+      { wch: 20 },  // Fecha aprobado
+      { wch: 20 },  // Fecha desaprobado
+      { wch: 30 },  // Motivo rechazo
+      { wch: 60 },  // Notas
+      { wch: 20 },  // Empresa envío
+      { wch: 22 },  // Código seguimiento
+      { wch: 20 },  // Fecha envío
+      { wch: 20 },  // Fecha resolución
+      { wch: 50 },  // Comprobante URL
+      { wch: 50 },  // Imagen producto URL
+    ]
 
-      const filas = (data || []).map((item) => ({
-        ID: item.id || '',
-        Tracking: item.tracking_id || '',
-        Estado: item.estado || '',
-        Aprobado: item.aprobado || '',
-        'Fecha ingreso': item.fecha_ingreso ? formatearFecha(item.fecha_ingreso) : '',
-        'Fecha creación': item.fecha_creacion ? formatearFecha(item.fecha_creacion) : '',
-        'Fecha compra': item.fecha_compra ? formatearFecha(item.fecha_compra) : '',
-        'Días garantía': item.dias_garantia ?? '',
-        Cliente: item.nombre_apellido || item.nombre || '',
-        Dirección: item.direccion || '',
-        Localidad: item.localidad || '',
-        Provincia: item.provincia || '',
-        'Código postal': item.codigo_postal || '',
-        Teléfono: item.telefono || '',
-        Email: item.email || '',
-        Canal: item.canal || '',
-        Vendedor: item.vendedor || '',
-        'Número venta manual': item.numero_venta_manual || '',
-        Producto: item.producto || '',
-        Modelo: item.modelo || '',
-        Motivo: item.motivo || '',
-        'Descripción falla': item.descripcion_falla || '',
-        Garantía: item.garantia || '',
-        'Fecha aprobado': item.fecha_aprobado ? formatearFecha(item.fecha_aprobado) : '',
-        'Fecha desaprobado': item.fecha_desaprobado ? formatearFecha(item.fecha_desaprobado) : '',
-        'Motivo rechazo': item.motivo_rechazo || '',
-        Notas: item.notas || '',
-        'Empresa envío': item.empresa_envio || '',
-        'Código seguimiento': item.codigo_seguimiento || '',
-        'Fecha envío': item.fecha_envio ? formatearFecha(item.fecha_envio) : '',
-        'Fecha resolución': item.fecha_resolucion ? formatearFecha(item.fecha_resolucion) : '',
-        'Comprobante URL': item.comprobante_url || '',
-        'Imagen producto URL': item.imagen_producto_url || '',
-      }))
+    const range = XLSX.utils.decode_range(ws['!ref'])
+    ws['!autofilter'] = { ref: ws['!ref'] }
 
-      const ws = XLSX.utils.json_to_sheet(filas)
+   for (let col = range.s.c; col <= range.e.c; col++) {
+  const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col })
+  if (!ws[cellAddress]) continue
 
-      ws['!cols'] = [
-        { wch: 8 },
-        { wch: 22 },
-        { wch: 14 },
-        { wch: 12 },
-        { wch: 20 },
-        { wch: 20 },
-        { wch: 20 },
-        { wch: 14 },
-        { wch: 28 },
-        { wch: 32 },
-        { wch: 18 },
-        { wch: 18 },
-        { wch: 14 },
-        { wch: 18 },
-        { wch: 30 },
-        { wch: 18 },
-        { wch: 20 },
-        { wch: 20 },
-        { wch: 24 },
-        { wch: 20 },
-        { wch: 24 },
-        { wch: 40 },
-        { wch: 14 },
-        { wch: 20 },
-        { wch: 20 },
-        { wch: 30 },
-        { wch: 60 },
-        { wch: 20 },
-        { wch: 22 },
-        { wch: 20 },
-        { wch: 20 },
-        { wch: 50 },
-        { wch: 50 },
-      ]
+  ws[cellAddress].s = {
+    font: { bold: true, color: { rgb: 'FFFFFF' } },
+    fill: { fgColor: { rgb: '1F4E78' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: {
+      top: { style: 'thin', color: { rgb: 'D9D9D9' } },
+      bottom: { style: 'thin', color: { rgb: 'D9D9D9' } },
+      left: { style: 'thin', color: { rgb: 'D9D9D9' } },
+      right: { style: 'thin', color: { rgb: 'D9D9D9' } },
+    },
+  }
+}
 
-      if (ws['!ref']) {
-        const range = XLSX.utils.decode_range(ws['!ref'])
-        ws['!autofilter'] = { ref: ws['!ref'] }
+   const wb = XLSX.utils.book_new()
+XLSX.utils.book_append_sheet(wb, ws, 'Reclamos')
+XLSX.writeFile(wb, `reclamos_temptech_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  } catch (err) {
+    console.error('Error exportando Excel:', err)
+    alert('Error al exportar el Excel')
+  }
+}
+//Fin funcion Exportar XLS
+const navigate = useNavigate()
 
-        for (let col = range.s.c; col <= range.e.c; col++) {
-          const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col })
-          if (!ws[cellAddress]) continue
+useEffect(() => {
+  async function checkUser() {
+    const { data } = await supabase.auth.getSession()
 
-          ws[cellAddress].s = {
-            font: { bold: true, color: { rgb: 'FFFFFF' } },
-            fill: { fgColor: { rgb: '1F4E78' } },
-            alignment: { horizontal: 'center', vertical: 'center' },
-            border: {
-              top: { style: 'thin', color: { rgb: 'D9D9D9' } },
-              bottom: { style: 'thin', color: { rgb: 'D9D9D9' } },
-              left: { style: 'thin', color: { rgb: 'D9D9D9' } },
-              right: { style: 'thin', color: { rgb: 'D9D9D9' } },
-            },
-          }
-        }
-      }
-
-      const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, 'Reclamos')
-      XLSX.writeFile(wb, `reclamos_temptech_${new Date().toISOString().slice(0, 10)}.xlsx`)
-    } catch (err) {
-      console.error('Error exportando Excel:', err)
-      alert('Error al exportar el Excel')
+    if (!data.session) {
+      navigate('/login')
     }
   }
 
+  checkUser()
+}, [])
   async function cambiarEstado(item, nuevoEstado) {
     if (item.estado === 'cerrado' && nuevoEstado !== 'cerrado') {
       return
@@ -265,12 +259,10 @@ export default function AdminList() {
       notas: unirNotas(item.notas, nuevaNota),
     }
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('devoluciones')
       .update(payload)
       .eq('id', item.id)
-      .select()
-
 
     if (error) {
       console.error('Error al actualizar aprobado:', error)
@@ -290,11 +282,11 @@ export default function AdminList() {
         }),
       })
 
-      const dataMail = await resp.json().catch(() => ({}))
-      console.log('RESPUESTA API APROBADO:', dataMail)
+      const data = await resp.json().catch(() => ({}))
+      console.log('RESPUESTA API APROBADO:', data)
 
       if (!resp.ok) {
-        alert(`Error mail aprobado: ${dataMail.detalle || dataMail.error || 'Sin detalle'}`)
+        alert(`Error mail aprobado: ${data.detalle || data.error || 'Sin detalle'}`)
       }
     } catch (err) {
       console.error('ERROR FETCH APROBADO:', err)
@@ -547,79 +539,10 @@ Fecha de envío: ${fechaEnvio}`
     await cargar()
   }
 
-return (
-  
-  <div style={{ padding: 30, fontFamily: 'Arial, sans-serif' }}>
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-      }}
-    >
-      <h1 style={{ margin: 0 }}>Panel Admin - Reclamos</h1>
+  return (
+    <div style={{ padding: 30, fontFamily: 'Arial, sans-serif' }}>
+      <h1>Panel Admin - Reclamos</h1>
 
-      <button
-        onClick={async () => {
-          await supabase.auth.signOut()
-          navigate('/login')
-        }}
-        style={{
-          padding: '10px 14px',
-          borderRadius: 8,
-          border: '1px solid #ccc',
-          background: '#fff',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-        }}
-      >
-        Cerrar sesión
-      </button>
-    </div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: 12,
-          marginBottom: 24,
-        }}
-      >
-        <div style={cardDashboardStyle}>
-          <div style={cardTituloStyle}>Total</div>
-          <div style={cardNumeroStyle}>{totalCasos}</div>
-        </div>
-
-        <div style={cardDashboardStyle}>
-          <div style={cardTituloStyle}>Ingresado</div>
-          <div style={cardNumeroStyle}>{totalIngresado}</div>
-        </div>
-
-        <div style={cardDashboardStyle}>
-          <div style={cardTituloStyle}>Pendiente</div>
-          <div style={cardNumeroStyle}>{totalPendiente}</div>
-        </div>
-
-        <div style={cardDashboardStyle}>
-          <div style={cardTituloStyle}>Resolución</div>
-          <div style={cardNumeroStyle}>{totalResolucion}</div>
-        </div>
-
-        <div style={cardDashboardStyle}>
-          <div style={cardTituloStyle}>Rechazado</div>
-          <div style={cardNumeroStyle}>{totalRechazado}</div>
-        </div>
-
-        <div style={cardDashboardStyle}>
-          <div style={cardTituloStyle}>Cerrado</div>
-          <div style={cardNumeroStyle}>{totalCerrado}</div>
-        </div>
-
-        <div style={cardDashboardStyle}>
-          <div style={cardTituloStyle}>Aprobados</div>
-          <div style={cardNumeroStyle}>{totalAprobados}</div>
-        </div>
-      </div>
       <div style={{ marginBottom: 20 }}>
         <label style={{ marginRight: 10 }}>Filtrar por estado:</label>
         <select
@@ -634,7 +557,7 @@ return (
           <option value="cerrado">Cerrado</option>
         </select>
       </div>
-
+<div style={{ marginBottom: 20 }}></div>
       <div style={{ marginBottom: 20 }}>
         <input
           type="text"
@@ -656,11 +579,11 @@ return (
           Limpiar
         </button>
       </div>
-
-      <div style={{ marginBottom: 20 }}>
-        <button onClick={exportarExcel}>Exportar Excel</button>
-      </div>
-
+<div style={{ marginBottom: 20 }}>
+  <button onClick={exportarExcel}>
+    Exportar Excel
+  </button>
+</div>
       {errorTexto && (
         <div style={{ marginBottom: 20, color: 'red', fontWeight: 'bold' }}>
           Error: {errorTexto}
