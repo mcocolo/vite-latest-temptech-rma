@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import * as XLSX from 'xlsx-js-style'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../supabaseClient'
+import { supabase } from '../lib/supabase'
 function formatearFecha(fecha) {
   if (!fecha) return '-'
   const d = new Date(fecha)
