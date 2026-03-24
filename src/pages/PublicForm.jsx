@@ -370,7 +370,7 @@ export default function PublicForm() {
           boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
         }}
       >
-        <h1 style={{ margin: 0, fontSize: 30 }}>Portal de devoluciones TempTech</h1>
+        <h1 style={{ margin: 0, fontSize: 30 }}>Portal de Soporte TEMPTECH</h1>
         <p style={{ marginTop: 8, color: '#6b7280' }}>
           Carga inicial de reclamos con adjuntos, ID automático y registro en base de datos.
         </p>

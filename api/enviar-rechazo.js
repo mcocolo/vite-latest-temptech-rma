@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     console.log('Antes de resend.emails.send')
 
     const { data, error } = await resend.emails.send({
-      from: 'TEMPTECH <onboarding@resend.dev>',
+      from: 'RMA TEMPTECH <garantia@temptech.com.ar>',
       to: [to],
       subject: 'TEMPTECH - Solicitud Desaprobada',
       html: `
