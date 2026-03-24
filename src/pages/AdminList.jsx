@@ -352,34 +352,38 @@ useEffect(() => {
   }
 
   async function rechazarCaso(item) {
-    if (item.estado === 'cerrado') return
+  if (item.estado === 'cerrado') return
 
-    if (!textoRechazo || !textoRechazo.trim()) {
-      alert('Ingresá el motivo del rechazo')
-      return
-    }
-
-    const { error } = await supabase
-      .from('devoluciones')
-      .update({
-        aprobado: 'NO',
-        estado: 'rechazado',
-        motivo_rechazo: textoRechazo.trim(),
-        fecha_aprobado: new Date().toISOString(),
-      })
-      .eq('id', item.id)
-
-    if (error) {
-      console.error('Error al rechazar caso:', error)
-      alert('No se pudo rechazar el caso')
-      return
-    }
-
-    setRechazoAbiertoId(null)
-    setTextoRechazo('')
-    await cargar()
-    alert('Caso rechazado correctamente')
+  if (!textoRechazo || !textoRechazo.trim()) {
+    alert('Ingresá el motivo del rechazo')
+    return
   }
+
+  const nuevaNota = armarLineaNota('RECHAZADO', textoRechazo)
+
+  const { error } = await supabase
+    .from('devoluciones')
+    .update({
+      aprobado: 'NO',
+      estado: 'rechazado',
+      motivo_rechazo: textoRechazo.trim(),
+      fecha_aprobado: null,
+      fecha_desaprobado: new Date().toISOString(),
+      notas: unirNotas(item.notas, nuevaNota),
+    })
+    .eq('id', item.id)
+
+  if (error) {
+    console.error('Error al rechazar caso:', error)
+    alert('No se pudo rechazar el caso')
+    return
+  }
+
+  setRechazoAbiertoId(null)
+  setTextoRechazo('')
+  await cargar()
+  alert('Caso rechazado correctamente')
+}
 
   function abrirResolucion(item) {
     setResolucionAbiertaId(item.id)
