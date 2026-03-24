@@ -213,7 +213,7 @@ XLSX.writeFile(wb, `reclamos_temptech_${new Date().toISOString().slice(0, 10)}.x
   }
 }
 //Fin funcion Exportar XLS
-const navigate = useNavigate()
+
 
 useEffect(() => {
   async function checkUser() {
