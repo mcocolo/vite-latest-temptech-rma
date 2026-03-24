@@ -26,20 +26,26 @@ export default function AdminList() {
   const [datos, setDatos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtroEstado, setFiltroEstado] = useState('Ingresado')
-  const [errorTexto, setErrorTexto] = useState('')
 
-  const [rechazoAbiertoId, setRechazoAbiertoId] = useState(null)
-  const [textoRechazo, setTextoRechazo] = useState('')
+  // 👇 DASHBOARD
+  const totalCasos = datos.length
+  const totalIngresado = datos.filter((item) => item.estado === 'Ingresado').length
+  const totalPendiente = datos.filter((item) => item.estado === 'Pendiente').length
+  const totalResolucion = datos.filter((item) => item.estado === 'Resolucion').length
+  const totalRechazado = datos.filter((item) => item.estado === 'rechazado').length
+  const totalCerrado = datos.filter((item) => item.estado === 'cerrado').length
+  const totalAprobados = datos.filter((item) => item.aprobado === 'SI').length
 
-  const [resolucionAbiertaId, setResolucionAbiertaId] = useState(null)
-  const [empresaEnvio, setEmpresaEnvio] = useState('Correo Argentino')
-  const [codigoSeguimiento, setCodigoSeguimiento] = useState('')
-  const [fechaEnvio, setFechaEnvio] = useState('')
-
-  const datosFiltrados = datos.filter((item) => {
-    if (!busquedaTracking) return true
-    return item.tracking_id?.toLowerCase().includes(busquedaTracking.toLowerCase())
-  })
+  // 👇 FILTRO
+  const datosFiltrados = datos
+    .filter((item) => {
+      if (filtroEstado === 'todos') return true
+      return item.estado === filtroEstado
+    })
+    .filter((item) => {
+      if (!busquedaTracking) return true
+      return item.tracking_id?.toLowerCase().includes(busquedaTracking.toLowerCase())
+    })
 
   function armarLineaNota(tipo, texto) {
     const ahora = new Date()
@@ -265,9 +271,6 @@ export default function AdminList() {
       .eq('id', item.id)
       .select()
 
-    console.log('PAYLOAD APROBADO:', payload)
-    console.log('DATA UPDATE APROBADO:', data)
-    console.log('ERROR UPDATE APROBADO:', error)
 
     if (error) {
       console.error('Error al actualizar aprobado:', error)
@@ -545,6 +548,7 @@ Fecha de envío: ${fechaEnvio}`
   }
 
 return (
+  
   <div style={{ padding: 30, fontFamily: 'Arial, sans-serif' }}>
     <div
       style={{
@@ -573,7 +577,49 @@ return (
         Cerrar sesión
       </button>
     </div>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gap: 12,
+          marginBottom: 24,
+        }}
+      >
+        <div style={cardDashboardStyle}>
+          <div style={cardTituloStyle}>Total</div>
+          <div style={cardNumeroStyle}>{totalCasos}</div>
+        </div>
 
+        <div style={cardDashboardStyle}>
+          <div style={cardTituloStyle}>Ingresado</div>
+          <div style={cardNumeroStyle}>{totalIngresado}</div>
+        </div>
+
+        <div style={cardDashboardStyle}>
+          <div style={cardTituloStyle}>Pendiente</div>
+          <div style={cardNumeroStyle}>{totalPendiente}</div>
+        </div>
+
+        <div style={cardDashboardStyle}>
+          <div style={cardTituloStyle}>Resolución</div>
+          <div style={cardNumeroStyle}>{totalResolucion}</div>
+        </div>
+
+        <div style={cardDashboardStyle}>
+          <div style={cardTituloStyle}>Rechazado</div>
+          <div style={cardNumeroStyle}>{totalRechazado}</div>
+        </div>
+
+        <div style={cardDashboardStyle}>
+          <div style={cardTituloStyle}>Cerrado</div>
+          <div style={cardNumeroStyle}>{totalCerrado}</div>
+        </div>
+
+        <div style={cardDashboardStyle}>
+          <div style={cardTituloStyle}>Aprobados</div>
+          <div style={cardNumeroStyle}>{totalAprobados}</div>
+        </div>
+      </div>
       <div style={{ marginBottom: 20 }}>
         <label style={{ marginRight: 10 }}>Filtrar por estado:</label>
         <select
