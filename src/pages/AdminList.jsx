@@ -252,7 +252,7 @@ export default function AdminList() {
 
     const payload = {
       aprobado: 'SI',
-      estado: 'Pendiente',
+      estado: 'pendiente',
       fecha_aprobado: new Date().toISOString(),
       fecha_desaprobado: null,
       motivo_rechazo: null,
@@ -544,9 +544,35 @@ Fecha de envío: ${fechaEnvio}`
     await cargar()
   }
 
-  return (
-    <div style={{ padding: 30, fontFamily: 'Arial, sans-serif' }}>
-      <h1>Panel Admin - Reclamos</h1>
+return (
+  <div style={{ padding: 30, fontFamily: 'Arial, sans-serif' }}>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+      }}
+    >
+      <h1 style={{ margin: 0 }}>Panel Admin - Reclamos</h1>
+
+      <button
+        onClick={async () => {
+          await supabase.auth.signOut()
+          navigate('/login')
+        }}
+        style={{
+          padding: '10px 14px',
+          borderRadius: 8,
+          border: '1px solid #ccc',
+          background: '#fff',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+        }}
+      >
+        Cerrar sesión
+      </button>
+    </div>
 
       <div style={{ marginBottom: 20 }}>
         <label style={{ marginRight: 10 }}>Filtrar por estado:</label>
@@ -554,9 +580,9 @@ Fecha de envío: ${fechaEnvio}`
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value)}
         >
-          <option value="Todos">Todos</option>
+          <option value="todos">Todos</option>
           <option value="Ingresado">Ingresado</option>
-          <option value="Pendiente">Pendiente</option>
+          <option value="pendiente">Pendiente</option>
           <option value="Resolucion">Resolución</option>
           <option value="rechazado">Rechazado</option>
           <option value="cerrado">Cerrado</option>
@@ -813,7 +839,7 @@ Fecha de envío: ${fechaEnvio}`
                   }}
                 >
                   <button
-                    onClick={() => cambiarEstado(item, 'Pendiente')}
+                    onClick={() => cambiarEstado(item, 'pendiente')}
                     disabled={item.estado === 'cerrado'}
                     style={{
                       opacity: item.estado === 'cerrado' ? 0.6 : 1,
