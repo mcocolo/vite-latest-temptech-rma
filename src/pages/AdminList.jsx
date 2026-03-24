@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
 import * as XLSX from 'xlsx-js-style'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../supabaseClient'
 function formatearFecha(fecha) {
   if (!fecha) return '-'
   const d = new Date(fecha)
@@ -207,7 +207,17 @@ XLSX.writeFile(wb, `reclamos_temptech_${new Date().toISOString().slice(0, 10)}.x
 }
 //Fin funcion Exportar XLS
 const navigate = useNavigate()
+const cerrarSesion = async () => {
+  const { error } = await supabase.auth.signOut()
 
+  if (error) {
+    console.error('Error al cerrar sesión:', error)
+    alert('No se pudo cerrar sesión')
+    return
+  }
+
+  navigate('/login')
+}
 useEffect(() => {
   async function checkUser() {
     const { data } = await supabase.auth.getSession()
@@ -377,7 +387,7 @@ useEffect(() => {
     console.error('Error al rechazar caso:', error)
     alert('No se pudo rechazar el caso')
     return
-  }
+  } 
 
   setRechazoAbiertoId(null)
   setTextoRechazo('')
@@ -545,7 +555,31 @@ Fecha de envío: ${fechaEnvio}`
 
   return (
     <div style={{ padding: 30, fontFamily: 'Arial, sans-serif' }}>
-      <h1>Panel Admin - Reclamos</h1>
+      <div
+  style={{
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  }}
+>
+  <h1>Panel Admin - Reclamos</h1>
+
+  <button
+    onClick={cerrarSesion}
+    style={{
+      padding: '8px 14px',
+      border: 'none',
+      borderRadius: 6,
+      backgroundColor: '#d32f2f',
+      color: '#fff',
+      cursor: 'pointer',
+      fontWeight: 'bold',
+    }}
+  >
+    Cerrar sesión
+  </button>
+</div>
 
       <div style={{ marginBottom: 20 }}>
         <label style={{ marginRight: 10 }}>Filtrar por estado:</label>
