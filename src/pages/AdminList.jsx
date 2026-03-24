@@ -93,9 +93,14 @@ export default function AdminList() {
 async function exportarExcel() {
   try {
     const { data, error } = await supabase
-      .from('devoluciones')
-      .select('*')
-      .order('fecha_creacion', { ascending: false })
+  .from('devoluciones')
+  .update(payload)
+  .eq('id', item.id)
+  .select()
+
+console.log('PAYLOAD APROBADO:', payload)
+console.log('DATA UPDATE APROBADO:', data)
+console.log('ERROR UPDATE APROBADO:', error)
 
     if (error) {
       console.error('Error exportando:', error)
