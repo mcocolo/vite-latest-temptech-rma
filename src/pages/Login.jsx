@@ -1,23 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
-
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-  // 👇 Aca va esto
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         navigate('/admin')
       }
     })
-  }, [])
-  
+  }, [navigate])
+
   const handleLogin = async (e) => {
     e.preventDefault()
     setError('')
@@ -68,11 +67,7 @@ export default function Login() {
         </button>
       </form>
 
-      {error && (
-        <p style={{ color: 'red', marginTop: '10px' }}>
-          {error}
-        </p>
-      )}
+      {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
     </div>
   )
 }
