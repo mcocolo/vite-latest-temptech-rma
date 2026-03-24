@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
+  
   const handleLogin = async (e) => {
     e.preventDefault()
     setError('')
@@ -28,7 +30,13 @@ export default function Login() {
 
     navigate('/admin')
   }
-
+useEffect(() => {
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session) {
+      navigate('/admin')
+    }
+  })
+}, [])
   return (
     <div style={{ maxWidth: '400px', margin: '50px auto' }}>
       <h2>Login Admin</h2>

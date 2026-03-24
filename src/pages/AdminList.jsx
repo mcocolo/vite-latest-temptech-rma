@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import * as XLSX from 'xlsx-js-style'
 import { useNavigate } from 'react-router-dom'
+const navigate = useNavigate()
+
+const handleLogout = async () => {
+  await supabase.auth.signOut()
+  navigate('/login')
+}
 function formatearFecha(fecha) {
   if (!fecha) return '-'
   const d = new Date(fecha)
@@ -571,7 +577,12 @@ Fecha de envío: ${fechaEnvio}`
             border: '1px solid #ccc',
           }}
         />
-
+<div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+  <h2>Panel Admin</h2>
+  <button onClick={handleLogout}>
+    Cerrar sesión
+  </button>
+</div>
         <button
           onClick={() => setBusquedaTracking('')}
           style={{ marginLeft: 10 }}
