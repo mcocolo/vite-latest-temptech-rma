@@ -5,22 +5,7 @@ import AdminList from './pages/AdminList'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<PublicForm />} />
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              <AdminList />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </BrowserRouter>
-  )
+  return <div>FUNCIONA</div>
 }
 
 export default App
