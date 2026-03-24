@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import * as XLSX from 'xlsx-js-style'
 import { useNavigate } from 'react-router-dom'
-const navigate = useNavigate()
+
 
 const handleLogout = async () => {
   await supabase.auth.signOut()
@@ -25,6 +25,7 @@ function formatearFecha(fecha) {
 }
 
 export default function AdminList() {
+  const navigate = useNavigate()
   const [busquedaTracking, setBusquedaTracking] = useState('')
   const [datos, setDatos] = useState([])
   const [cargando, setCargando] = useState(true)
