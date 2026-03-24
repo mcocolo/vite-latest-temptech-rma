@@ -554,9 +554,9 @@ Fecha de envío: ${fechaEnvio}`
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value)}
         >
-          <option value="todos">Todos</option>
+          <option value="Todos">Todos</option>
           <option value="Ingresado">Ingresado</option>
-          <option value="pendiente">Pendiente</option>
+          <option value="Pendiente">Pendiente</option>
           <option value="Resolucion">Resolución</option>
           <option value="rechazado">Rechazado</option>
           <option value="cerrado">Cerrado</option>
@@ -813,7 +813,7 @@ Fecha de envío: ${fechaEnvio}`
                   }}
                 >
                   <button
-                    onClick={() => cambiarEstado(item, 'pendiente')}
+                    onClick={() => cambiarEstado(item, 'Pendiente')}
                     disabled={item.estado === 'cerrado'}
                     style={{
                       opacity: item.estado === 'cerrado' ? 0.6 : 1,
