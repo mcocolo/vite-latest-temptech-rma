@@ -1,66 +1,77 @@
 import { Resend } from 'resend'
 
-console.log('APROBADO TIENE RESEND_API_KEY?', !!process.env.RESEND_API_KEY)
-console.log('APROBADO PRIMEROS 6 CHARS KEY:', process.env.RESEND_API_KEY?.slice(0, 6))
-
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export default async function handler(req, res) {
-  console.log('--- INICIO enviar-aprobado ---')
+  console.log('--- INICIO enviar-rechazo ---')
 
   if (req.method !== 'POST') {
-    console.log('Método inválido:', req.method)
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
-    console.log('Body crudo:', req.body)
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {})
 
-    const to = (req.body?.to || '').trim()
-    const nombre = (req.body?.nombre || '').trim()
-    const apellido = (req.body?.apellido || '').trim()
+    console.log('Body recibido RECHAZO:', body)
 
-    console.log('Datos limpios:', { to, nombre, apellido })
+    const to = String(body.to || body.email || '').trim()
+    const nombre = String(body.nombre || '').trim()
+    const apellido = String(body.apellido || '').trim()
+    const tracking_id = String(body.tracking_id || body.trackingId || '').trim()
+    const motivo = String(body.motivo || body.textoRechazo || '').trim()
+    const producto = String(body.producto || '').trim()
+    const modelo = String(body.modelo || '').trim()
 
     if (!to) {
-      console.log('Falta email del destinatario')
       return res.status(400).json({ error: 'Falta email del destinatario' })
     }
 
-    console.log('Antes de resend.emails.send')
+    const nombreCompleto = [nombre, apellido].filter(Boolean).join(' ')
+    const saludo = nombreCompleto ? `Estimado/a ${nombreCompleto},` : 'Estimado/a cliente,'
 
-    const { data, error } = await resend.emails.send({
-      from: 'RMA TEMPTECH <notificaciones@temptech.com.ar>',
+    const response = await resend.emails.send({
+      from: 'TempTech <notificaciones@temptech.com.ar>',
       to: [to],
-      subject: 'TEMPTECH - Solicitud Desaprobada',
+      subject: 'TEMPTECH - Solicitud rechazada',
       html: `
-        <p>Estimado cliente${nombre ? ' ' + nombre : ''}${apellido ? ' ' + apellido : ''},</p>
+        <div style="font-family: Arial, sans-serif; color: #111; line-height: 1.5;">
+          <p>${saludo}</p>
 
-        <p>
-          Le comunicamos que su proceso fue revisado por nuestro equipo y el mismo fue
-          <b>Aprobado</b>.
-          Esto quiere decir que la información cargada se encuentra completa y en condiciones.
-          A la brevedad nos estaremos comunicando para brindarle novedades para su resolución.
-        </p>
+          <p>
+            Por medio de la presente le comunicamos que en el día de la fecha se realizó el control correspondiente
+            a su producto <b>${producto || '-'}</b> ${modelo ? `- <b>${modelo}</b>` : ''},
+            y el resultado del mismo fue <b>RECHAZADO</b>.
+          </p>
 
-        <p>Saludos cordiales,<br/>Equipo Soporte TEMPTECH</p>
+          ${
+            motivo
+              ? `<p><b>Motivo:</b> ${motivo}</p>`
+              : ''
+          }
+
+          ${
+            tracking_id
+              ? `<p><b>ID de seguimiento:</b> ${tracking_id}</p>`
+              : ''
+          }
+
+          <p>Saludos cordiales,<br/>Equipo Soporte TEMPTECH</p>
+        </div>
       `,
     })
 
-    console.log('Después de resend.emails.send')
-    console.log('Data resend:', data)
-    console.log('Error resend:', error)
+    console.log('RESPUESTA RESEND RECHAZO:', response)
 
-    if (error) {
+    if (response?.error) {
       return res.status(500).json({
         error: 'Error enviando email',
-        detalle: error?.message || JSON.stringify(error),
+        detalle: response.error?.message || JSON.stringify(response.error),
       })
     }
 
-    return res.status(200).json({ ok: true, data })
+    return res.status(200).json({ ok: true, data: response?.data || response })
   } catch (err) {
-    console.error('CATCH APROBADO:', err)
+    console.error('ERROR RECHAZO:', err)
     return res.status(500).json({
       error: 'Error enviando email',
       detalle: err?.message || String(err),

@@ -411,7 +411,66 @@ useEffect(() => {
 
     return ''
   }
+async function rechazarCaso(item) {
+  if (item.estado === 'cerrado') return
 
+  if (!textoRechazo || !textoRechazo.trim()) {
+    alert('Ingresá el motivo del rechazo')
+    return
+  }
+
+  const motivo = textoRechazo.trim()
+  const nuevaNota = armarLineaNota('RECHAZADO', motivo)
+
+  const { error } = await supabase
+    .from('devoluciones')
+    .update({
+      aprobado: 'NO',
+      estado: 'rechazado',
+      motivo_rechazo: motivo,
+      fecha_aprobado: null,
+      fecha_desaprobado: new Date().toISOString(),
+      notas: unirNotas(item.notas, nuevaNota),
+    })
+    .eq('id', item.id)
+
+  if (error) {
+    console.error('Error al rechazar caso:', error)
+    alert('No se pudo rechazar el caso')
+    return
+  }
+
+  try {
+    const resp = await fetch('/api/enviar-rechazo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: (item.email || '').trim(),
+        nombre: item.nombre_apellido || item.nombre || '',
+        apellido: '',
+        tracking_id: item.tracking_id || '',
+        motivo,
+        producto: item.producto || '',
+        modelo: item.modelo || '',
+      }),
+    })
+
+    const data = await resp.json().catch(() => ({}))
+    console.log('RESPUESTA API RECHAZO:', data)
+
+    if (!resp.ok) {
+      alert(`Error mail rechazo: ${data.detalle || data.error || 'Sin detalle'}`)
+    }
+  } catch (err) {
+    console.error('ERROR FETCH RECHAZO:', err)
+    alert('Se rechazó, pero falló el envío del mail')
+  }
+
+  setRechazoAbiertoId(null)
+  setTextoRechazo('')
+  await cargar()
+  alert('Caso rechazado correctamente')
+}
   async function enviarEmailResolucion(item) {
     if (!item.email) {
       alert('Este reclamo no tiene email cargado')
