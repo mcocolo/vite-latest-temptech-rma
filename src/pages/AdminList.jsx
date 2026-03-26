@@ -20,12 +20,12 @@ const T = {
 }
 
 const STATUS_CONFIG = {
-  'Ingresado':  { color: T.blue,   bg: T.blueDim,   label: 'Ingresado' },
-  'pendiente':  { color: T.yellow, bg: T.yellowDim,  label: 'Pendiente' },
-  'Resolucion': { color: T.purple, bg: 'rgba(167,139,250,0.12)', label: 'Resolución' },
-  'Devolucion': { color: T.orange, bg: 'rgba(251,146,60,0.12)', label: 'Devolución' },
-  'rechazado':  { color: T.red,    bg: T.redDim,    label: 'Rechazado' },
-  'cerrado':    { color: T.text3,  bg: T.surface2,  label: 'Cerrado' },
+  'Ingresado':  { color: T.blue,   bg: T.blueDim,                     label: 'Ingresado' },
+  'pendiente':  { color: T.yellow, bg: T.yellowDim,                    label: 'Pendiente' },
+  'Resolucion': { color: T.purple, bg: 'rgba(167,139,250,0.12)',       label: 'Resolución' },
+  'Devolucion': { color: T.orange, bg: 'rgba(251,146,60,0.12)',        label: 'Devolución' },
+  'rechazado':  { color: T.red,    bg: T.redDim,                       label: 'Rechazado' },
+  'cerrado':    { color: T.text3,  bg: T.surface2,                     label: 'Cerrado' },
 }
 
 function Badge({ estado, aprobado }) {
@@ -38,18 +38,18 @@ function Badge({ estado, aprobado }) {
   )
 }
 
-function Btn({ children, onClick, disabled, variant = 'ghost', size = 'sm' }) {
+function Btn({ children, onClick, disabled, variant = 'ghost' }) {
   const variants = {
-    ghost:    { bg: T.surface3, color: T.text2,   border: `1px solid ${T.border2}` },
-    primary:  { bg: T.grad,     color: '#fff',     border: 'none' },
-    success:  { bg: T.greenDim, color: T.green,    border: `1px solid ${T.green}40` },
-    danger:   { bg: T.redDim,   color: T.red,      border: `1px solid ${T.red}40` },
-    warn:     { bg: T.yellowDim,color: T.yellow,   border: `1px solid ${T.yellow}40` },
-    orange:   { bg: 'rgba(251,146,60,0.12)', color: T.orange, border: `1px solid rgba(251,146,60,0.35)` },
+    ghost:   { bg: T.surface3, color: T.text2,   border: `1px solid ${T.border2}` },
+    primary: { bg: T.grad,     color: '#fff',     border: 'none' },
+    success: { bg: T.greenDim, color: T.green,    border: `1px solid ${T.green}40` },
+    danger:  { bg: T.redDim,   color: T.red,      border: `1px solid ${T.red}40` },
+    warn:    { bg: T.yellowDim,color: T.yellow,   border: `1px solid ${T.yellow}40` },
+    orange:  { bg: 'rgba(251,146,60,0.12)', color: T.orange, border: `1px solid rgba(251,146,60,0.35)` },
   }
   const v = variants[variant] || variants.ghost
   return (
-    <button onClick={onClick} disabled={disabled} style={{ background: v.bg, color: v.color, border: v.border, borderRadius: T.radius, padding: size === 'sm' ? '6px 12px' : '9px 20px', fontSize: 12, fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1, fontFamily: T.font, transition: 'opacity .15s', whiteSpace: 'nowrap' }}>
+    <button onClick={onClick} disabled={disabled} style={{ background: v.bg, color: v.color, border: v.border, borderRadius: T.radius, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.4 : 1, fontFamily: T.font, transition: 'opacity .15s', whiteSpace: 'nowrap' }}>
       {children}
     </button>
   )
@@ -72,92 +72,134 @@ function formatearFecha(fecha) {
   return d.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
-// ── Panel genérico para Resolución y Devolución ──
-function PanelEnvio({ item, tipo, onClose, onGuardar, obtenerLinkSeguimiento }) {
+function sanitizeFileName(name) {
+  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._-]/g, '_')
+}
+
+async function subirArchivoAdmin(file, trackingId) {
+  if (!file) return null
+  const safeName = sanitizeFileName(file.name)
+  const path = `etiquetas/${trackingId}/${Date.now()}_${safeName}`
+  const { error } = await supabase.storage.from('devoluciones').upload(path, file, { upsert: false })
+  if (error) throw error
+  const { data } = supabase.storage.from('devoluciones').getPublicUrl(path)
+  return data.publicUrl
+}
+
+// ── Panel unificado Resolución / Devolución ──
+function PanelEnvio({ item, tipo, onClose, onGuardar }) {
   const isDevolucion = tipo === 'Devolucion'
 
   const defaultTexto = isDevolucion
-    ? `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nTe adjuntamos la etiqueta para que nos realices la devolución de la unidad defectuosa en garantía.\n\nEmpresa: [empresa]\n[datos adicionales]`
-    : `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados. A continuación le dejamos los datos para el seguimiento de su envío.\n\nEmpresa: [empresa]\n[datos adicionales]`
+    ? `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nTe adjuntamos la etiqueta para que nos realices la devolución de la unidad defectuosa en garantía.`
+    : `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados. A continuación le dejamos los datos para el seguimiento de su envío.`
 
-  const [empresa, setEmpresa]     = useState(isDevolucion ? item.empresa_envio || 'Correo Argentino' : item.empresa_envio || 'Correo Argentino')
-  const [codigo, setCodigo]       = useState(item.codigo_seguimiento || '')
-  const [fechaEnvio, setFechaEnvio] = useState(item.fecha_envio || '')
-  const [textoEmail, setTextoEmail] = useState(defaultTexto)
-  const [textoDirty, setTextoDirty] = useState(false)
+  const [empresa, setEmpresa]         = useState(item.empresa_envio || 'Correo Argentino')
+  const [codigo, setCodigo]           = useState(item.codigo_seguimiento || '')
+  const [fechaEnvio, setFechaEnvio]   = useState(item.fecha_envio || '')
+  const [textoEmail, setTextoEmail]   = useState(defaultTexto)
+  // Archivo adjunto — solo para Devolución
+  const [adjunto, setAdjunto]         = useState(null)
+  const [subiendo, setSubiendo]       = useState(false)
 
-  // Actualizar texto automáticamente al cambiar empresa/código/fecha, salvo que el admin lo haya editado manualmente
-  useEffect(() => {
-    if (textoDirty) return
-    const datos = empresa !== 'Logistica Propia'
-      ? `Empresa: ${empresa}\nCódigo de seguimiento: ${codigo || '[completar]'}\nLink: ${obtenerLinkSeguimiento(empresa)}`
-      : `Empresa: Logística Propia\nFecha de envío: ${fechaEnvio || '[seleccionar]'}`
+  const color     = isDevolucion ? T.orange : T.purple
+  const colorBg   = isDevolucion ? 'rgba(251,146,60,0.08)'   : 'rgba(167,139,250,0.08)'
+  const colorBord = isDevolucion ? 'rgba(251,146,60,0.3)'    : 'rgba(167,139,250,0.3)'
 
-    const base = isDevolucion
-      ? `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nTe adjuntamos la etiqueta para que nos realices la devolución de la unidad defectuosa en garantía.\n\n${datos}`
-      : `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados. A continuación le dejamos los datos para el seguimiento de su envío.\n\n${datos}`
-    setTextoEmail(base)
-  }, [empresa, codigo, fechaEnvio, textoDirty])
+  async function handleGuardar() {
+    if (!isDevolucion) {
+      // Resolución: empresa obligatoria
+      if (!empresa) { alert('Seleccioná una empresa'); return }
+      if (empresa !== 'Logistica Propia' && !codigo) { alert('Ingresá el código de seguimiento'); return }
+      if (empresa === 'Logistica Propia' && !fechaEnvio) { alert('Seleccioná una fecha de envío'); return }
+    }
 
-  const color = isDevolucion ? T.orange : T.purple
-  const colorBg = isDevolucion ? 'rgba(251,146,60,0.08)' : 'rgba(167,139,250,0.08)'
-  const colorBorder = isDevolucion ? 'rgba(251,146,60,0.3)' : 'rgba(167,139,250,0.3)'
+    let adjuntoUrl = null
+    if (isDevolucion && adjunto) {
+      setSubiendo(true)
+      try {
+        adjuntoUrl = await subirArchivoAdmin(adjunto, item.tracking_id)
+      } catch (err) {
+        alert(`Error subiendo archivo: ${err.message}`)
+        setSubiendo(false)
+        return
+      }
+      setSubiendo(false)
+    }
+
+    onGuardar({ empresa, codigo, fechaEnvio, textoEmail, tipo, adjuntoUrl })
+  }
 
   return (
-    <div style={{ margin: '0 22px 18px', padding: 18, background: colorBg, border: `1px solid ${colorBorder}`, borderRadius: T.radius }}>
+    <div style={{ margin: '0 22px 18px', padding: 18, background: colorBg, border: `1px solid ${colorBord}`, borderRadius: T.radius }}>
       <div style={{ fontSize: 13, fontWeight: 700, color, marginBottom: 16 }}>
         {isDevolucion ? '📦 Datos de devolución' : '🚚 Datos de resolución'}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-        <div>
-          <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Empresa</label>
-          <select value={empresa} onChange={e => setEmpresa(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%' }}>
-            <option value="Correo Argentino">Correo Argentino</option>
-            <option value="Andreani">Andreani</option>
-            <option value="Logistica Propia">Logística Propia</option>
-          </select>
-        </div>
-        {empresa !== 'Logistica Propia' ? (
+      {/* Empresa + código/fecha — solo Resolución */}
+      {!isDevolucion && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <div>
-            <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Código de seguimiento</label>
-            <input type="text" value={codigo} onChange={e => setCodigo(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%', outline: 'none' }} placeholder="Código de seguimiento" />
+            <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Empresa</label>
+            <select value={empresa} onChange={e => setEmpresa(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%' }}>
+              <option value="Correo Argentino">Correo Argentino</option>
+              <option value="Andreani">Andreani</option>
+              <option value="Logistica Propia">Logística Propia</option>
+            </select>
           </div>
-        ) : (
-          <div>
-            <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Fecha de envío</label>
-            <input type="date" value={fechaEnvio} onChange={e => setFechaEnvio(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%', outline: 'none' }} />
-          </div>
-        )}
-      </div>
-
-      {empresa !== 'Logistica Propia' && (
-        <div style={{ marginBottom: 12, fontSize: 12, color: T.text3 }}>
-          <a href={obtenerLinkSeguimiento(empresa)} target="_blank" rel="noreferrer" style={{ color: '#7b9fff' }}>🔗 Abrir link de seguimiento</a>
+          {empresa !== 'Logistica Propia' ? (
+            <div>
+              <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Código de seguimiento</label>
+              <input type="text" value={codigo} onChange={e => setCodigo(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%', outline: 'none' }} placeholder="Código de seguimiento" />
+            </div>
+          ) : (
+            <div>
+              <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Fecha de envío</label>
+              <input type="date" value={fechaEnvio} onChange={e => setFechaEnvio(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%', outline: 'none', colorScheme: 'dark' }} />
+            </div>
+          )}
         </div>
       )}
 
-      {/* Texto editable del email */}
-      <div style={{ marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-          <label style={{ fontSize: 11, color: T.text3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Texto del email (editable)</label>
-          {textoDirty && (
-            <button type="button" onClick={() => setTextoDirty(false)} style={{ background: 'none', border: 'none', color: '#7b9fff', fontSize: 11, cursor: 'pointer', textDecoration: 'underline', fontFamily: T.font }}>
-              Resetear texto
-            </button>
-          )}
+      {/* Adjunto etiqueta — solo Devolución */}
+      {isDevolucion && (
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+            Adjuntar etiqueta de devolución (PDF o imagen)
+          </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <label style={{ background: T.surface2, border: `1px dashed ${T.border2}`, borderRadius: T.radius, padding: '8px 14px', cursor: 'pointer', fontSize: 13, color: T.text2, display: 'flex', alignItems: 'center', gap: 8, transition: 'border .2s' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = T.orange}
+              onMouseLeave={e => e.currentTarget.style.borderColor = T.border2}
+            >
+              <span style={{ fontSize: 16 }}>📎</span>
+              {adjunto ? adjunto.name : 'Seleccionar archivo'}
+              <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => setAdjunto(e.target.files?.[0] || null)} />
+            </label>
+            {adjunto && (
+              <button type="button" onClick={() => setAdjunto(null)} style={{ background: 'none', border: 'none', color: T.red, cursor: 'pointer', fontSize: 18 }}>×</button>
+            )}
+          </div>
+          {adjunto && <div style={{ fontSize: 11, color: T.text3, marginTop: 4 }}>El archivo se va a subir y el link se adjuntará en el email</div>}
         </div>
+      )}
+
+      {/* Texto editable */}
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+          Texto del email (editable)
+        </label>
         <textarea
           value={textoEmail}
-          onChange={e => { setTextoEmail(e.target.value); setTextoDirty(true) }}
-          rows={8}
+          onChange={e => setTextoEmail(e.target.value)}
+          rows={isDevolucion ? 6 : 8}
           style={{ width: '100%', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '10px 12px', color: T.text2, fontSize: 12, fontFamily: T.font, resize: 'vertical', outline: 'none', lineHeight: 1.7 }}
         />
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <Btn variant={isDevolucion ? 'orange' : 'primary'} onClick={() => onGuardar({ empresa, codigo, fechaEnvio, textoEmail, tipo })}>
-          Guardar y enviar email
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <Btn variant={isDevolucion ? 'orange' : 'primary'} onClick={handleGuardar} disabled={subiendo}>
+          {subiendo ? 'Subiendo archivo...' : 'Guardar y enviar email'}
         </Btn>
         <Btn onClick={onClose}>Cancelar</Btn>
       </div>
@@ -167,13 +209,12 @@ function PanelEnvio({ item, tipo, onClose, onGuardar, obtenerLinkSeguimiento }) 
 
 export default function AdminList() {
   const [busquedaTracking, setBusquedaTracking] = useState('')
-  const [datos, setDatos] = useState([])
-  const [cargando, setCargando] = useState(true)
+  const [datos, setDatos]             = useState([])
+  const [cargando, setCargando]       = useState(true)
   const [filtroEstado, setFiltroEstado] = useState('Ingresado')
-  const [errorTexto, setErrorTexto] = useState('')
+  const [errorTexto, setErrorTexto]   = useState('')
   const [rechazoAbiertoId, setRechazoAbiertoId] = useState(null)
   const [textoRechazo, setTextoRechazo] = useState('')
-  // Panel de envío unificado (resolución + devolución)
   const [panelAbierto, setPanelAbierto] = useState(null) // { id, tipo }
   const navigate = useNavigate()
 
@@ -183,19 +224,14 @@ export default function AdminList() {
     const fecha = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
     return `${fecha} - ${tipo}: ${texto || ''}`.trim()
   }
-  function unirNotas(notasActuales, nuevaLinea) {
-    if (!notasActuales || !notasActuales.trim()) return nuevaLinea
-    return `${notasActuales}\n${nuevaLinea}`
-  }
+  function unirNotas(n, l) { return (!n || !n.trim()) ? l : `${n}\n${l}` }
 
   async function cargar() {
-    setCargando(true)
-    setErrorTexto('')
-    let query = supabase.from('devoluciones').select('*').order('fecha_creacion', { ascending: false })
-    if (filtroEstado !== 'todos') query = query.eq('estado', filtroEstado)
-    const { data, error } = await query
-    if (error) { setErrorTexto(error.message || 'Error al leer reclamos'); setDatos([]) }
-    else setDatos(data || [])
+    setCargando(true); setErrorTexto('')
+    let q = supabase.from('devoluciones').select('*').order('fecha_creacion', { ascending: false })
+    if (filtroEstado !== 'todos') q = q.eq('estado', filtroEstado)
+    const { data, error } = await q
+    if (error) { setErrorTexto(error.message); setDatos([]) } else setDatos(data || [])
     setCargando(false)
   }
 
@@ -212,8 +248,7 @@ export default function AdminList() {
     if (item.estado === 'cerrado' && nuevoEstado !== 'cerrado') return
     const payload = { estado: nuevoEstado }
     if (nuevoEstado !== 'rechazado') payload.motivo_rechazo = null
-    const { error } = await supabase.from('devoluciones').update(payload).eq('id', item.id)
-    if (error) { alert('No se pudo actualizar el estado'); return }
+    await supabase.from('devoluciones').update(payload).eq('id', item.id)
     await cargar()
   }
 
@@ -226,7 +261,7 @@ export default function AdminList() {
     try {
       const resp = await fetch('/api/enviar-aprobado', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: (item.email || '').trim(), nombre: item.nombre_apellido || item.nombre || '', apellido: '', tracking_id: item.tracking_id || '' }) })
       const data = await resp.json().catch(() => ({}))
-      if (!resp.ok) alert(`Error mail aprobado: ${data.detalle || data.error || 'Sin detalle'}`)
+      if (!resp.ok) alert(`Error mail aprobado: ${data.detalle || data.error}`)
     } catch { alert('Se aprobó, pero falló el envío del mail') }
     await cargar()
   }
@@ -241,42 +276,35 @@ export default function AdminList() {
 
   async function rechazarCaso(item) {
     if (item.estado === 'cerrado') return
-    if (!textoRechazo || !textoRechazo.trim()) { alert('Ingresá el motivo del rechazo'); return }
+    if (!textoRechazo?.trim()) { alert('Ingresá el motivo del rechazo'); return }
     const motivo = textoRechazo.trim()
     const nuevaNota = armarLineaNota('RECHAZADO', motivo)
     const { error } = await supabase.from('devoluciones').update({ aprobado: 'NO', estado: 'rechazado', motivo_rechazo: motivo, fecha_aprobado: null, fecha_desaprobado: new Date().toISOString(), notas: unirNotas(item.notas, nuevaNota) }).eq('id', item.id)
     if (error) { alert('No se pudo rechazar el caso'); return }
     try {
-      const resp = await fetch('/api/enviar-rechazo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: (item.email || '').trim(), nombre: item.nombre_apellido || item.nombre || '', apellido: '', tracking_id: item.tracking_id || '', motivo, producto: item.producto || '', modelo: item.modelo || '' }) })
+      const resp = await fetch('/api/enviar-rechazo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: (item.email || '').trim(), nombre: item.nombre_apellido || '', apellido: '', tracking_id: item.tracking_id || '', motivo, producto: item.producto || '', modelo: item.modelo || '' }) })
       const data = await resp.json().catch(() => ({}))
-      if (!resp.ok) alert(`Error mail rechazo: ${data.detalle || data.error || 'Sin detalle'}`)
+      if (!resp.ok) alert(`Error mail rechazo: ${data.detalle || data.error}`)
     } catch { alert('Se rechazó, pero falló el envío del mail') }
-    setRechazoAbiertoId(null)
-    setTextoRechazo('')
+    setRechazoAbiertoId(null); setTextoRechazo('')
     await cargar()
   }
 
-  function obtenerLinkSeguimiento(empresa) {
-    if (empresa === 'Correo Argentino') return 'https://www.correoargentino.com.ar/formularios/e-commerce'
-    if (empresa === 'Andreani') return 'https://www.andreani.com/?tab=seguir-envio'
-    return ''
-  }
-
-  // Guardar resolución o devolución
-  async function guardarEnvio(item, { empresa, codigo, fechaEnvio, textoEmail, tipo }) {
-    if (!empresa) { alert('Seleccioná una empresa'); return }
-    if (empresa !== 'Logistica Propia' && !codigo) { alert('Ingresá el código de seguimiento'); return }
-    if (empresa === 'Logistica Propia' && !fechaEnvio) { alert('Seleccioná una fecha de envío'); return }
-
+  async function guardarEnvio(item, { empresa, codigo, fechaEnvio, textoEmail, tipo, adjuntoUrl }) {
     const notaTexto = window.prompt(`Nota para ${tipo.toUpperCase()}:`, '')
     if (notaTexto === null) return
-
     const nuevaNota = armarLineaNota(tipo.toUpperCase(), notaTexto)
+
+    // Armar texto final con link del adjunto si existe
+    let textoFinal = textoEmail
+    if (adjuntoUrl) {
+      textoFinal += `\n\nEtiqueta de devolución: ${adjuntoUrl}`
+    }
 
     const { error } = await supabase.from('devoluciones').update({
       estado: tipo,
-      empresa_envio: empresa,
-      codigo_seguimiento: empresa === 'Logistica Propia' ? null : codigo,
+      empresa_envio: empresa || null,
+      codigo_seguimiento: empresa !== 'Logistica Propia' ? codigo : null,
       fecha_envio: empresa === 'Logistica Propia' ? fechaEnvio : null,
       fecha_resolucion: new Date().toISOString(),
       notas: unirNotas(item.notas, nuevaNota),
@@ -284,20 +312,19 @@ export default function AdminList() {
 
     if (error) { alert(`Error al guardar ${tipo}`); return }
 
-    // Enviar email con texto editable
     try {
-      const { data, error: emailError } = await supabase.functions.invoke('enviar-email-resolucion', {
+      const { error: emailError } = await supabase.functions.invoke('enviar-email-resolucion', {
         body: {
           to: String(item.email || '').trim(),
           subject: `TEMPTECH - ${tipo === 'Devolucion' ? 'Devolución' : 'Resolución'} de reclamo ${item.tracking_id}`,
-          text: textoEmail,
+          text: textoFinal,
           tracking_id: item.tracking_id || '',
-          empresa,
-          tracking: empresa === 'Logistica Propia' ? '' : codigo,
+          empresa: empresa || '',
+          tracking: empresa !== 'Logistica Propia' ? codigo : '',
           fecha: empresa === 'Logistica Propia' ? fechaEnvio : '',
         },
       })
-      if (emailError || data?.error) { alert(`Se guardó pero falló el email: ${emailError?.message || JSON.stringify(data)}`); }
+      if (emailError) alert(`Se guardó pero falló el email: ${emailError.message}`)
     } catch (err) { alert(`Error al enviar email: ${err.message}`) }
 
     setPanelAbierto(null)
@@ -309,29 +336,27 @@ export default function AdminList() {
     const texto = window.prompt('Nota para CERRAR:', '')
     if (texto === null) return
     const nuevaNota = armarLineaNota('CERRADO', texto)
-    const { error } = await supabase.from('devoluciones').update({ estado: 'cerrado', notas: unirNotas(item.notas, nuevaNota) }).eq('id', item.id)
-    if (error) { alert('No se pudo cerrar el caso'); return }
+    await supabase.from('devoluciones').update({ estado: 'cerrado', notas: unirNotas(item.notas, nuevaNota) }).eq('id', item.id)
     await cargar()
   }
 
   async function exportarExcel() {
     try {
       const { data, error } = await supabase.from('devoluciones').select('*').order('fecha_creacion', { ascending: false })
-      if (error) { alert('No se pudo exportar el Excel'); return }
-      const filas = (data || []).map(item => ({ ID: item.id || '', Tracking: item.tracking_id || '', Estado: item.estado || '', Aprobado: item.aprobado || '', 'Fecha ingreso': item.fecha_ingreso ? formatearFecha(item.fecha_ingreso) : '', 'Fecha creación': item.fecha_creacion ? formatearFecha(item.fecha_creacion) : '', 'Fecha compra': item.fecha_compra ? formatearFecha(item.fecha_compra) : '', 'Días garantía': item.dias_garantia ?? '', Cliente: item.nombre_apellido || item.nombre || '', Dirección: item.direccion || '', Localidad: item.localidad || '', Provincia: item.provincia || '', 'Código postal': item.codigo_postal || '', Teléfono: item.telefono || '', Email: item.email || '', Canal: item.canal || '', Vendedor: item.vendedor || '', 'Número venta': item.numero_venta_manual || '', Producto: item.producto || '', Modelo: item.modelo || '', Motivo: item.motivo || '', Descripción: item.descripcion_falla || '', 'Motivo rechazo': item.motivo_rechazo || '', Notas: item.notas || '', 'Empresa envío': item.empresa_envio || '', 'Código seguimiento': item.codigo_seguimiento || '', 'Fecha envío': item.fecha_envio ? formatearFecha(item.fecha_envio) : '', 'Fecha resolución': item.fecha_resolucion ? formatearFecha(item.fecha_resolucion) : '' }))
+      if (error) { alert('No se pudo exportar'); return }
+      const filas = (data || []).map(item => ({ ID: item.id || '', Tracking: item.tracking_id || '', Estado: item.estado || '', Aprobado: item.aprobado || '', 'Fecha ingreso': formatearFecha(item.fecha_ingreso), 'Fecha creación': formatearFecha(item.fecha_creacion), 'Fecha compra': formatearFecha(item.fecha_compra), 'Días garantía': item.dias_garantia ?? '', Cliente: item.nombre_apellido || '', Dirección: item.direccion || '', Localidad: item.localidad || '', Provincia: item.provincia || '', 'CP': item.codigo_postal || '', Teléfono: item.telefono || '', Email: item.email || '', Canal: item.canal || '', Vendedor: item.vendedor || '', '# Venta': item.numero_venta_manual || '', Producto: item.producto || '', Modelo: item.modelo || '', Motivo: item.motivo || '', Descripción: item.descripcion_falla || '', 'Motivo rechazo': item.motivo_rechazo || '', Notas: item.notas || '', 'Empresa envío': item.empresa_envio || '', 'Código seguimiento': item.codigo_seguimiento || '', 'Fecha envío': formatearFecha(item.fecha_envio), 'Fecha resolución': formatearFecha(item.fecha_resolucion) }))
       const ws = XLSX.utils.json_to_sheet(filas)
-      ws['!cols'] = [8,22,14,12,20,20,20,14,28,32,18,18,14,18,30,18,20,20,24,20,24,40,30,60,20,22,20,20].map(wch => ({ wch }))
-      const range = XLSX.utils.decode_range(ws['!ref'])
+      ws['!cols'] = [8,22,14,12,20,20,20,14,28,32,18,18,8,18,30,18,20,20,24,20,24,40,30,60,20,22,20,20].map(wch => ({ wch }))
       ws['!autofilter'] = { ref: ws['!ref'] }
+      const range = XLSX.utils.decode_range(ws['!ref'])
       for (let col = range.s.c; col <= range.e.c; col++) {
         const ca = XLSX.utils.encode_cell({ r: 0, c: col })
-        if (!ws[ca]) continue
-        ws[ca].s = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '1F4E78' } }, alignment: { horizontal: 'center' } }
+        if (ws[ca]) ws[ca].s = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '1F4E78' } }, alignment: { horizontal: 'center' } }
       }
       const wb = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(wb, ws, 'Reclamos')
       XLSX.writeFile(wb, `reclamos_temptech_${new Date().toISOString().slice(0, 10)}.xlsx`)
-    } catch { alert('Error al exportar el Excel') }
+    } catch { alert('Error al exportar') }
   }
 
   const inputStyle = { background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, outline: 'none', fontFamily: T.font, width: '100%' }
@@ -339,6 +364,7 @@ export default function AdminList() {
   return (
     <div style={{ minHeight: '100vh', background: T.bg, fontFamily: T.font }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+      <style>{`* { box-sizing: border-box; } select option { background: ${T.surface2}; color: ${T.text}; } input::placeholder { color: ${T.text3}; } input[type="date"] { color-scheme: dark; }`}</style>
 
       {/* Topbar */}
       <header style={{ background: T.surface, borderBottom: `1px solid ${T.border}`, padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
@@ -347,9 +373,7 @@ export default function AdminList() {
           <img src={LOGO_URL} alt="TEMPTECH" style={{ height: 24, objectFit: 'contain' }} onError={e => e.currentTarget.style.display = 'none'} />
           <span style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 700, color: T.text2 }}>Panel Admin</span>
         </div>
-        <button onClick={cerrarSesion} style={{ background: T.redDim, color: T.red, border: `1px solid ${T.red}40`, borderRadius: T.radius, padding: '7px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: T.font }}>
-          Cerrar sesión
-        </button>
+        <button onClick={cerrarSesion} style={{ background: T.redDim, color: T.red, border: `1px solid ${T.red}40`, borderRadius: T.radius, padding: '7px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: T.font }}>Cerrar sesión</button>
       </header>
 
       <div style={{ padding: '28px 32px', maxWidth: 1200, margin: '0 auto' }}>
@@ -371,135 +395,148 @@ export default function AdminList() {
             <input type="text" placeholder="🔍 Buscar por tracking..." value={busquedaTracking} onChange={e => setBusquedaTracking(e.target.value)} style={inputStyle} />
             {busquedaTracking && <button onClick={() => setBusquedaTracking('')} style={{ background: T.surface3, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text2, fontSize: 12, cursor: 'pointer', fontFamily: T.font, whiteSpace: 'nowrap' }}>Limpiar</button>}
           </div>
-          <button onClick={exportarExcel} style={{ background: T.greenDim, color: T.green, border: `1px solid ${T.green}40`, borderRadius: T.radius, padding: '8px 16px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: T.font, whiteSpace: 'nowrap' }}>
-            📊 Exportar Excel
-          </button>
+          <button onClick={exportarExcel} style={{ background: T.greenDim, color: T.green, border: `1px solid ${T.green}40`, borderRadius: T.radius, padding: '8px 16px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: T.font, whiteSpace: 'nowrap' }}>📊 Exportar Excel</button>
           <div style={{ fontSize: 12, color: T.text3, marginLeft: 'auto' }}>{datosFiltrados.length} reclamo{datosFiltrados.length !== 1 ? 's' : ''}</div>
         </div>
 
         {errorTexto && <div style={{ background: T.redDim, border: `1px solid ${T.red}40`, color: T.red, padding: '14px 18px', borderRadius: T.radiusLg, marginBottom: 20, fontSize: 13 }}>⚠ Error: {errorTexto}</div>}
 
         {cargando ? (
-          <div style={{ textAlign: 'center', padding: 60, color: T.text3, fontSize: 14 }}>Cargando reclamos...</div>
+          <div style={{ textAlign: 'center', padding: 60, color: T.text3 }}>Cargando reclamos...</div>
         ) : datosFiltrados.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, color: T.text3, fontSize: 14 }}>No hay reclamos para mostrar.</div>
+          <div style={{ textAlign: 'center', padding: 60, color: T.text3 }}>No hay reclamos para mostrar.</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {datosFiltrados.map(item => (
-              <div key={item.id} style={{ background: T.surface, border: `1px solid ${item.aprobado === 'SI' ? T.green + '40' : T.border}`, borderRadius: T.radiusLg, overflow: 'hidden', position: 'relative' }}>
-                {item.aprobado === 'SI' && (
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%) rotate(-25deg)', fontSize: 54, fontWeight: 800, color: 'rgba(61,214,140,0.06)', pointerEvents: 'none', userSelect: 'none', whiteSpace: 'nowrap', zIndex: 0 }}>APROBADO</div>
-                )}
+            {datosFiltrados.map(item => {
+              // ── Reglas de habilitación de botones ──
+              const esCerrado    = item.estado === 'cerrado'
+              const esResolucion = item.estado === 'Resolucion'
+              const esDevolucion = item.estado === 'Devolucion'
+              const aprobadoSI   = item.aprobado === 'SI'
 
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  {/* Header */}
-                  <div style={{ padding: '16px 22px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: '#7b9fff', background: 'rgba(74,108,247,0.1)', padding: '4px 10px', borderRadius: 6 }}>{item.tracking_id || `#${item.id}`}</span>
-                      <Badge estado={item.estado} aprobado={item.aprobado} />
-                    </div>
-                    <div style={{ fontSize: 12, color: T.text3 }}>{formatearFecha(item.fecha_creacion)}</div>
-                  </div>
+              // Desaprobar: bloqueado si cerrado O si ya está en Resolución o Devolución
+              const desaprobarBloqueado = !aprobadoSI || esCerrado || esResolucion || esDevolucion
 
-                  {/* Body */}
-                  <div style={{ padding: '18px 22px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0 32px' }}>
-                    <div>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: T.text3, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>Cliente</div>
-                      <InfoRow label="Nombre" value={item.nombre_apellido || item.nombre} />
-                      <InfoRow label="Email" value={item.email} />
-                      <InfoRow label="Teléfono" value={item.telefono} />
-                      <InfoRow label="Dirección" value={item.direccion} />
-                      <InfoRow label="Localidad" value={`${item.localidad || ''} ${item.provincia || ''} ${item.codigo_postal || ''}`} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: T.text3, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>Producto</div>
-                      <InfoRow label="Producto" value={item.producto} />
-                      <InfoRow label="Modelo" value={item.modelo} />
-                      <InfoRow label="Motivo" value={item.motivo} />
-                      <InfoRow label="Descripción" value={item.descripcion_falla} />
-                      <InfoRow label="Días garantía" value={item.dias_garantia != null ? `${item.dias_garantia} días` : null} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: T.text3, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>Compra</div>
-                      <InfoRow label="Canal" value={item.canal} />
-                      <InfoRow label="Vendedor" value={item.vendedor} />
-                      <InfoRow label="# Venta" value={item.numero_venta_manual} />
-                      <InfoRow label="Fecha compra" value={formatearFecha(item.fecha_compra)} />
-                      <InfoRow label="Fecha ingreso" value={formatearFecha(item.fecha_ingreso)} />
-                    </div>
-                  </div>
-
-                  {/* Notas y archivos */}
-                  {(item.notas || item.motivo_rechazo || item.comprobante_url || item.imagen_producto_url || item.empresa_envio) && (
-                    <div style={{ margin: '0 22px 16px', padding: 14, background: T.surface2, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
-                      {item.motivo_rechazo && <div style={{ fontSize: 13, color: T.red, marginBottom: 8 }}><strong>Motivo rechazo:</strong> {item.motivo_rechazo}</div>}
-                      {item.empresa_envio && <InfoRow label="Empresa envío" value={item.empresa_envio} />}
-                      {item.codigo_seguimiento && <InfoRow label="Código seguimiento" value={item.codigo_seguimiento} />}
-                      {item.fecha_envio && <InfoRow label="Fecha envío" value={formatearFecha(item.fecha_envio)} />}
-                      {item.notas && <div style={{ fontSize: 12, color: T.text3, whiteSpace: 'pre-line', marginTop: 8, borderTop: `1px solid ${T.border}`, paddingTop: 8 }}>{item.notas}</div>}
-                      {(item.comprobante_url || item.imagen_producto_url) && (
-                        <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
-                          {item.comprobante_url && (
-                            <div>
-                              <div style={{ fontSize: 11, color: T.text3, marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Comprobante</div>
-                              <a href={item.comprobante_url} target="_blank" rel="noreferrer">
-                                <img src={item.comprobante_url} alt="Comprobante" style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: `1px solid ${T.border}` }} onError={e => e.currentTarget.style.display = 'none'} />
-                              </a>
-                            </div>
-                          )}
-                          {item.imagen_producto_url && (
-                            <div>
-                              <div style={{ fontSize: 11, color: T.text3, marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Imagen producto</div>
-                              <a href={item.imagen_producto_url} target="_blank" rel="noreferrer">
-                                <img src={item.imagen_producto_url} alt="Producto" style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: `1px solid ${T.border}` }} onError={e => e.currentTarget.style.display = 'none'} />
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+              return (
+                <div key={item.id} style={{ background: T.surface, border: `1px solid ${aprobadoSI ? T.green + '40' : T.border}`, borderRadius: T.radiusLg, overflow: 'hidden', position: 'relative' }}>
+                  {aprobadoSI && (
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%) rotate(-25deg)', fontSize: 54, fontWeight: 800, color: 'rgba(61,214,140,0.06)', pointerEvents: 'none', userSelect: 'none', whiteSpace: 'nowrap', zIndex: 0 }}>APROBADO</div>
                   )}
 
-                  {/* Acciones */}
-                  <div style={{ padding: '14px 22px', borderTop: `1px solid ${T.border}`, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <Btn onClick={() => cambiarEstado(item, 'pendiente')} disabled={item.estado === 'cerrado'}>Pendiente</Btn>
-                    <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Resolucion' })} disabled={item.aprobado !== 'SI'} variant="primary">🚚 Resolución</Btn>
-                    <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Devolucion' })} disabled={item.aprobado !== 'SI'} variant="orange">📦 Devolución</Btn>
-                    <Btn onClick={() => marcarAprobado(item)} disabled={item.aprobado === 'SI'} variant="success">✓ Aprobar</Btn>
-                    <Btn onClick={() => handleDesaprobar(item)} disabled={item.aprobado !== 'SI' || item.estado === 'cerrado'} variant="warn">Desaprobar</Btn>
-                    <Btn onClick={() => { setRechazoAbiertoId(item.id); setTextoRechazo(item.motivo_rechazo || '') }} disabled={item.estado === 'cerrado'} variant="danger">Rechazar</Btn>
-                    <Btn onClick={() => cerrarCaso(item)}>Cerrar</Btn>
-                  </div>
+                  <div style={{ position: 'relative', zIndex: 1 }}>
+                    {/* Header */}
+                    <div style={{ padding: '16px 22px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: '#7b9fff', background: 'rgba(74,108,247,0.1)', padding: '4px 10px', borderRadius: 6 }}>{item.tracking_id || `#${item.id}`}</span>
+                        <Badge estado={item.estado} aprobado={item.aprobado} />
+                      </div>
+                      <div style={{ fontSize: 12, color: T.text3 }}>{formatearFecha(item.fecha_creacion)}</div>
+                    </div>
 
-                  {/* Panel rechazo */}
-                  {rechazoAbiertoId === item.id && (
-                    <div style={{ margin: '0 22px 18px', padding: 16, background: T.redDim, border: `1px solid ${T.red}40`, borderRadius: T.radius }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: T.red, marginBottom: 10 }}>Motivo de rechazo</div>
-                      <textarea value={textoRechazo} onChange={e => setTextoRechazo(e.target.value)} rows={3} style={{ width: '100%', background: T.surface, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, resize: 'vertical', outline: 'none', marginBottom: 10 }} placeholder="Escribí por qué se rechaza este caso" />
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <Btn variant="danger" onClick={() => rechazarCaso(item)}>Confirmar rechazo</Btn>
-                        <Btn onClick={() => { setRechazoAbiertoId(null); setTextoRechazo('') }}>Cancelar</Btn>
+                    {/* Body */}
+                    <div style={{ padding: '18px 22px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0 32px' }}>
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: T.text3, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>Cliente</div>
+                        <InfoRow label="Nombre" value={item.nombre_apellido || item.nombre} />
+                        <InfoRow label="Email" value={item.email} />
+                        <InfoRow label="Teléfono" value={item.telefono} />
+                        <InfoRow label="Dirección" value={item.direccion} />
+                        <InfoRow label="Localidad" value={`${item.localidad || ''} ${item.provincia || ''} ${item.codigo_postal || ''}`} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: T.text3, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>Producto</div>
+                        <InfoRow label="Producto" value={item.producto} />
+                        <InfoRow label="Modelo" value={item.modelo} />
+                        <InfoRow label="Motivo" value={item.motivo} />
+                        <InfoRow label="Descripción" value={item.descripcion_falla} />
+                        <InfoRow label="Días garantía" value={item.dias_garantia != null ? `${item.dias_garantia} días` : null} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: T.text3, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>Compra</div>
+                        <InfoRow label="Canal" value={item.canal} />
+                        <InfoRow label="Vendedor" value={item.vendedor} />
+                        <InfoRow label="# Venta" value={item.numero_venta_manual} />
+                        <InfoRow label="Fecha compra" value={formatearFecha(item.fecha_compra)} />
+                        <InfoRow label="Fecha ingreso" value={formatearFecha(item.fecha_ingreso)} />
                       </div>
                     </div>
-                  )}
 
-                  {/* Panel resolución / devolución */}
-                  {panelAbierto?.id === item.id && (
-                    <PanelEnvio
-                      item={item}
-                      tipo={panelAbierto.tipo}
-                      onClose={() => setPanelAbierto(null)}
-                      onGuardar={(datos) => guardarEnvio(item, datos)}
-                      obtenerLinkSeguimiento={obtenerLinkSeguimiento}
-                    />
-                  )}
+                    {/* Notas y archivos */}
+                    {(item.notas || item.motivo_rechazo || item.comprobante_url || item.imagen_producto_url || item.empresa_envio) && (
+                      <div style={{ margin: '0 22px 16px', padding: 14, background: T.surface2, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
+                        {item.motivo_rechazo && <div style={{ fontSize: 13, color: T.red, marginBottom: 8 }}><strong>Motivo rechazo:</strong> {item.motivo_rechazo}</div>}
+                        {item.empresa_envio && <InfoRow label="Empresa envío" value={item.empresa_envio} />}
+                        {item.codigo_seguimiento && <InfoRow label="Código seguimiento" value={item.codigo_seguimiento} />}
+                        {item.fecha_envio && <InfoRow label="Fecha envío" value={formatearFecha(item.fecha_envio)} />}
+                        {item.notas && <div style={{ fontSize: 12, color: T.text3, whiteSpace: 'pre-line', marginTop: 8, borderTop: `1px solid ${T.border}`, paddingTop: 8 }}>{item.notas}</div>}
+                        {(item.comprobante_url || item.imagen_producto_url) && (
+                          <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
+                            {item.comprobante_url && (
+                              <div>
+                                <div style={{ fontSize: 11, color: T.text3, marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Comprobante</div>
+                                <a href={item.comprobante_url} target="_blank" rel="noreferrer">
+                                  <img src={item.comprobante_url} alt="Comprobante" style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: `1px solid ${T.border}` }} onError={e => e.currentTarget.style.display = 'none'} />
+                                </a>
+                              </div>
+                            )}
+                            {item.imagen_producto_url && (
+                              <div>
+                                <div style={{ fontSize: 11, color: T.text3, marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Imagen producto</div>
+                                <a href={item.imagen_producto_url} target="_blank" rel="noreferrer">
+                                  <img src={item.imagen_producto_url} alt="Producto" style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: `1px solid ${T.border}` }} onError={e => e.currentTarget.style.display = 'none'} />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Acciones */}
+                    <div style={{ padding: '14px 22px', borderTop: `1px solid ${T.border}`, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <Btn onClick={() => cambiarEstado(item, 'pendiente')} disabled={esCerrado}>Pendiente</Btn>
+                      <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Resolucion' })} disabled={!aprobadoSI} variant="primary">🚚 Resolución</Btn>
+                      <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Devolucion' })} disabled={!aprobadoSI} variant="orange">📦 Devolución</Btn>
+                      <Btn onClick={() => marcarAprobado(item)} disabled={aprobadoSI} variant="success">✓ Aprobar</Btn>
+                      <Btn
+                        onClick={() => handleDesaprobar(item)}
+                        disabled={desaprobarBloqueado}
+                        variant="warn"
+                      >
+                        Desaprobar
+                      </Btn>
+                      <Btn onClick={() => { setRechazoAbiertoId(item.id); setTextoRechazo(item.motivo_rechazo || '') }} disabled={esCerrado} variant="danger">Rechazar</Btn>
+                      <Btn onClick={() => cerrarCaso(item)}>Cerrar</Btn>
+                    </div>
+
+                    {/* Panel rechazo */}
+                    {rechazoAbiertoId === item.id && (
+                      <div style={{ margin: '0 22px 18px', padding: 16, background: T.redDim, border: `1px solid ${T.red}40`, borderRadius: T.radius }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: T.red, marginBottom: 10 }}>Motivo de rechazo</div>
+                        <textarea value={textoRechazo} onChange={e => setTextoRechazo(e.target.value)} rows={3} style={{ width: '100%', background: T.surface, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, resize: 'vertical', outline: 'none', marginBottom: 10 }} placeholder="Escribí por qué se rechaza este caso" />
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <Btn variant="danger" onClick={() => rechazarCaso(item)}>Confirmar rechazo</Btn>
+                          <Btn onClick={() => { setRechazoAbiertoId(null); setTextoRechazo('') }}>Cancelar</Btn>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Panel resolución / devolución */}
+                    {panelAbierto?.id === item.id && (
+                      <PanelEnvio
+                        item={item}
+                        tipo={panelAbierto.tipo}
+                        onClose={() => setPanelAbierto(null)}
+                        onGuardar={(datos) => guardarEnvio(item, datos)}
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
-      <style>{`* { box-sizing: border-box; } select option { background: ${T.surface2}; color: ${T.text}; } input::placeholder { color: ${T.text3}; }`}</style>
     </div>
   )
 }

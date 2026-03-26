@@ -57,7 +57,7 @@ function sanitizeFileName(name) {
 
 async function subirArchivo(file, trackingId, folder) {
   if (!file) return null
-  if (file.size > 10 * 1024 * 1024) throw new Error('Cada archivo debe pesar menos de 10 MB.')
+  if (file.size > 10 * 1024 * 1024) throw new Error(`El archivo "${file.name}" supera los 10 MB.`)
   const safeName = sanitizeFileName(file.name)
   const path = `${folder}/${trackingId}/${Date.now()}_${safeName}`
   const { error } = await supabase.storage.from('devoluciones').upload(path, file, { upsert: false })
@@ -66,8 +66,20 @@ async function subirArchivo(file, trackingId, folder) {
   return data.publicUrl
 }
 
-// ── UI helpers ──
-const inputStyle = { background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '10px 14px', color: T.text, fontSize: 14, outline: 'none', width: '100%', fontFamily: T.font, transition: 'border .2s' }
+// ── Base input style ──
+const inputBase = {
+  background: T.surface2,
+  border: `1px solid ${T.border}`,
+  borderRadius: T.radius,
+  padding: '10px 14px',
+  color: T.text,
+  fontSize: 14,
+  outline: 'none',
+  width: '100%',
+  fontFamily: T.font,
+  transition: 'border .2s',
+  colorScheme: 'dark', // ← hace que el ícono del date picker sea blanco
+}
 
 function Label({ children }) {
   return <label style={{ fontSize: 11, fontWeight: 600, color: T.text2, textTransform: 'uppercase', letterSpacing: '0.6px', display: 'block', marginBottom: 6 }}>{children}</label>
@@ -77,7 +89,12 @@ function Input({ label, span, ...props }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0, ...(span ? { gridColumn: span } : {}) }}>
       {label && <Label>{label}</Label>}
-      <input style={inputStyle} onFocus={e => e.target.style.borderColor = '#4a6cf7'} onBlur={e => e.target.style.borderColor = T.border} {...props} />
+      <input
+        style={inputBase}
+        onFocus={e => e.target.style.borderColor = '#4a6cf7'}
+        onBlur={e => e.target.style.borderColor = T.border}
+        {...props}
+      />
     </div>
   )
 }
@@ -86,7 +103,7 @@ function Select({ label, span, children, ...props }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0, ...(span ? { gridColumn: span } : {}) }}>
       {label && <Label>{label}</Label>}
-      <select style={{ ...inputStyle, cursor: 'pointer' }} {...props}>{children}</select>
+      <select style={{ ...inputBase, cursor: 'pointer' }} {...props}>{children}</select>
     </div>
   )
 }
@@ -95,7 +112,7 @@ function Textarea({ label, span, ...props }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0, ...(span ? { gridColumn: span } : {}) }}>
       {label && <Label>{label}</Label>}
-      <textarea style={{ ...inputStyle, minHeight: 110, resize: 'vertical' }} onFocus={e => e.target.style.borderColor = '#4a6cf7'} onBlur={e => e.target.style.borderColor = T.border} {...props} />
+      <textarea style={{ ...inputBase, minHeight: 110, resize: 'vertical' }} onFocus={e => e.target.style.borderColor = '#4a6cf7'} onBlur={e => e.target.style.borderColor = T.border} {...props} />
     </div>
   )
 }
@@ -109,58 +126,76 @@ function SectionTitle({ emoji, title }) {
   )
 }
 
-// ── Multi-file upload component ──
+// ── Multi-file upload ──
+// Usamos un input file con `multiple` real — cada click abre el selector y AGREGA al array
 function MultiFileInput({ label, span, files, onAdd, onRemove, accept }) {
+  const inputId = `mfi-${label?.replace(/\s/g, '-')}`
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, ...(span ? { gridColumn: span } : {}) }}>
       {label && <Label>{label}</Label>}
 
-      {/* Preview de archivos seleccionados */}
+      {/* Previews */}
       {files.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 4 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {files.map((file, idx) => (
-            <div key={idx} style={{ background: T.surface2, border: `1px solid ${T.border2}`, borderRadius: 8, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-              {file.type.startsWith('image/') ? (
-                <img src={URL.createObjectURL(file)} alt="" style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 4 }} />
+            <div key={`${file.name}-${idx}`} style={{ background: T.surface2, border: `1px solid ${T.border2}`, borderRadius: 8, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, maxWidth: 220 }}>
+              {file.type?.startsWith('image/') ? (
+                <img src={URL.createObjectURL(file)} alt="" style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
               ) : (
-                <span style={{ fontSize: 20 }}>📄</span>
+                <span style={{ fontSize: 22, flexShrink: 0 }}>📄</span>
               )}
-              <span style={{ color: T.text2, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
-              <button type="button" onClick={() => onRemove(idx)} style={{ background: 'none', border: 'none', color: T.red, cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: 0, flexShrink: 0 }}>×</button>
+              <span style={{ color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{file.name}</span>
+              <button type="button" onClick={() => onRemove(idx)} style={{ background: 'none', border: 'none', color: T.red, cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '0 2px', flexShrink: 0 }}>×</button>
             </div>
           ))}
         </div>
       )}
 
-      {/* Botón para agregar más */}
-      <label style={{ background: T.surface2, border: `1px dashed ${T.border2}`, borderRadius: T.radius, padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: T.text2, transition: 'border .2s' }}
+      {/* Label actúa como botón */}
+      <label htmlFor={inputId} style={{
+        background: T.surface2, border: `1px dashed ${T.border2}`, borderRadius: T.radius,
+        padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+        gap: 8, fontSize: 13, color: T.text2, transition: 'border .2s', userSelect: 'none',
+      }}
         onMouseEnter={e => e.currentTarget.style.borderColor = '#4a6cf7'}
         onMouseLeave={e => e.currentTarget.style.borderColor = T.border2}
       >
         <span style={{ fontSize: 18 }}>📎</span>
-        <span>Agregar {files.length > 0 ? 'más archivos' : 'archivos'}</span>
-        {files.length > 0 && <span style={{ marginLeft: 'auto', background: 'rgba(74,108,247,0.15)', color: '#7b9fff', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20 }}>{files.length} archivo{files.length !== 1 ? 's' : ''}</span>}
-        <input
-          type="file"
-          accept={accept}
-          multiple
-          style={{ display: 'none' }}
-          onChange={e => { if (e.target.files) onAdd(Array.from(e.target.files)); e.target.value = '' }}
-        />
+        <span>{files.length > 0 ? 'Agregar más archivos' : 'Seleccionar archivos'}</span>
+        {files.length > 0 && (
+          <span style={{ marginLeft: 'auto', background: 'rgba(74,108,247,0.15)', color: '#7b9fff', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20 }}>
+            {files.length} archivo{files.length !== 1 ? 's' : ''}
+          </span>
+        )}
       </label>
+
+      {/* Input OCULTO con multiple */}
+      <input
+        id={inputId}
+        type="file"
+        accept={accept}
+        multiple
+        style={{ display: 'none' }}
+        onChange={e => {
+          if (e.target.files && e.target.files.length > 0) {
+            onAdd(Array.from(e.target.files))
+          }
+          // Reset para que onChange vuelva a dispararse aunque elijan el mismo archivo
+          e.target.value = ''
+        }}
+      />
     </div>
   )
 }
 
 export default function PublicForm() {
-  const [form, setForm] = useState(emptyForm)
-  // Multi-file arrays
-  const [comprobantes, setComprobantes]       = useState([])   // múltiples comprobantes
-  const [imagenesProducto, setImagenesProducto] = useState([]) // múltiples fotos del producto
-  const [guardando, setGuardando] = useState(false)
-  const [mensaje, setMensaje]     = useState('')
-  const [errorMsg, setErrorMsg]   = useState('')
-  const [trackingId, setTrackingId] = useState('')
+  const [form, setForm]                     = useState(emptyForm)
+  const [comprobantes, setComprobantes]     = useState([])
+  const [imagenesProducto, setImagenesProducto] = useState([])
+  const [guardando, setGuardando]           = useState(false)
+  const [mensaje, setMensaje]               = useState('')
+  const [errorMsg, setErrorMsg]             = useState('')
+  const [trackingId, setTrackingId]         = useState('')
 
   const modelos = useMemo(() => modelosPorProducto[form.producto] || [], [form.producto])
   const motivos = useMemo(() => motivosPorProducto[form.producto] || [], [form.producto])
@@ -198,53 +233,41 @@ export default function PublicForm() {
     try {
       const id = generarTrackingId()
 
-      // Subir todos los comprobantes
-      const comprobantesUrls = []
-      for (const file of comprobantes) {
-        const url = await subirArchivo(file, id, 'comprobantes')
-        if (url) comprobantesUrls.push(url)
-      }
+      // Subir todos los comprobantes en paralelo
+      const comprobantesUrls = await Promise.all(comprobantes.map(f => subirArchivo(f, id, 'comprobantes')))
+      const imagenesUrls     = await Promise.all(imagenesProducto.map(f => subirArchivo(f, id, 'productos')))
 
-      // Subir todas las imágenes del producto
-      const imagenesUrls = []
-      for (const file of imagenesProducto) {
-        const url = await subirArchivo(file, id, 'productos')
-        if (url) imagenesUrls.push(url)
-      }
-
-      // Calcular días garantía
+      // Días de garantía
       let diasGarantia = null
       if (form.fechaCompra && form.fechaIngreso) {
         const fc = new Date(form.fechaCompra), fi = new Date(form.fechaIngreso)
-        if (!isNaN(fc.getTime()) && !isNaN(fi.getTime())) diasGarantia = Math.floor((fi - fc) / (1000 * 60 * 60 * 24))
+        if (!isNaN(fc) && !isNaN(fi)) diasGarantia = Math.floor((fi - fc) / (1000 * 60 * 60 * 24))
       }
 
       const payload = {
-        tracking_id: id,
-        fecha_ingreso: new Date().toISOString().slice(0, 10),
-        nombre_apellido: form.nombreApellido.trim(),
-        direccion: form.direccion.trim(),
-        localidad: form.localidad.trim(),
-        provincia: form.provincia,
-        codigo_postal: form.codigoPostal.trim(),
-        telefono: form.telefono.trim(),
-        fecha_compra: form.fechaCompra || null,
-        dias_garantia: diasGarantia,
-        canal: form.canal || null,
-        vendedor: form.vendedor.trim() || null,
+        tracking_id:         id,
+        fecha_ingreso:       new Date().toISOString().slice(0, 10),
+        nombre_apellido:     form.nombreApellido.trim(),
+        direccion:           form.direccion.trim(),
+        localidad:           form.localidad.trim(),
+        provincia:           form.provincia,
+        codigo_postal:       form.codigoPostal.trim(),
+        telefono:            form.telefono.trim(),
+        fecha_compra:        form.fechaCompra || null,
+        dias_garantia:       diasGarantia,
+        canal:               form.canal || null,
+        vendedor:            form.vendedor.trim() || null,
         numero_venta_manual: form.ventaManual.trim() || null,
-        // Guardamos la primera URL en el campo original (retrocompatibilidad)
-        comprobante_url: comprobantesUrls[0] || null,
-        imagen_producto_url: imagenesUrls[0] || null,
-        // URLs adicionales en campos JSON (si existen en tu tabla)
-        comprobantes_urls: comprobantesUrls,
-        imagenes_producto_urls: imagenesUrls,
-        producto: form.producto,
-        modelo: form.modelo,
-        motivo: form.motivo,
-        descripcion_falla: form.descripcionFalla.trim(),
-        email: form.email.trim(),
-        estado: 'Ingresado',
+        comprobante_url:     comprobantesUrls[0] || null,       // retrocompat
+        imagen_producto_url: imagenesUrls[0] || null,            // retrocompat
+        comprobantes_urls:   comprobantesUrls.filter(Boolean),
+        imagenes_producto_urls: imagenesUrls.filter(Boolean),
+        producto:            form.producto,
+        modelo:              form.modelo,
+        motivo:              form.motivo,
+        descripcion_falla:   form.descripcionFalla.trim(),
+        email:               form.email.trim(),
+        estado:              'Ingresado',
       }
 
       const { error } = await supabase.from('devoluciones').insert([payload]).select()
@@ -281,6 +304,16 @@ export default function PublicForm() {
     <div style={{ minHeight: '100vh', background: T.bg, padding: '32px 16px', fontFamily: T.font }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
 
+      {/* Date input color fix */}
+      <style>{`
+        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        * { box-sizing: border-box; }
+        input::placeholder, textarea::placeholder { color: ${T.text3}; }
+        select option { background: ${T.surface2}; color: ${T.text}; }
+        input[type="date"] { color-scheme: dark; color: ${T.text}; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+      `}</style>
+
       <div style={{ maxWidth: 860, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img src={LOGO_URL} alt="TEMPTECH" style={{ height: 42, objectFit: 'contain', marginBottom: 16 }} onError={e => e.currentTarget.style.display = 'none'} />
@@ -297,9 +330,7 @@ export default function PublicForm() {
         )}
 
         {errorMsg && (
-          <div style={{ background: T.redDim, border: `1px solid rgba(255,77,109,0.3)`, color: T.red, padding: '14px 20px', borderRadius: T.radiusLg, marginBottom: 24, fontSize: 14 }}>
-            ⚠ {errorMsg}
-          </div>
+          <div style={{ background: T.redDim, border: `1px solid rgba(255,77,109,0.3)`, color: T.red, padding: '14px 20px', borderRadius: T.radiusLg, marginBottom: 24, fontSize: 14 }}>⚠ {errorMsg}</div>
         )}
 
         <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: T.radiusLg, overflow: 'hidden' }}>
@@ -320,6 +351,7 @@ export default function PublicForm() {
               <Input label="Teléfono *" value={form.telefono} onChange={e => update('telefono', e.target.value)} placeholder="+54 11 1234-5678" />
 
               <SectionTitle emoji="🛒" title="Datos de compra" />
+              {/* Fecha con color-scheme dark para que sea blanca */}
               <Input label="Fecha de Compra" type="date" value={form.fechaCompra} onChange={e => update('fechaCompra', e.target.value)} />
               <Select label="Canal de compra" value={form.canal} onChange={e => update('canal', e.target.value)}>
                 <option value="">Seleccionar canal</option>
@@ -328,7 +360,6 @@ export default function PublicForm() {
               <Input label="Vendedor" value={form.vendedor} onChange={e => update('vendedor', e.target.value)} placeholder="Nombre del vendedor" />
               <Input span="1 / -1" label="# Venta o Comprobante" placeholder="Podés escribir el número manualmente" value={form.ventaManual} onChange={e => update('ventaManual', e.target.value)} />
 
-              {/* Multi-file: comprobantes */}
               <MultiFileInput
                 span="1 / -1"
                 label="Comprobantes de compra (podés subir varios)"
@@ -353,7 +384,6 @@ export default function PublicForm() {
               </Select>
               <Textarea span="1 / -1" label="Descripción de la falla *" value={form.descripcionFalla} onChange={e => update('descripcionFalla', e.target.value)} placeholder="Describí el problema con el mayor detalle posible..." />
 
-              {/* Multi-file: imágenes del producto */}
               <MultiFileInput
                 span="1 / -1"
                 label="Fotos del producto (podés subir varias)"
@@ -380,13 +410,6 @@ export default function PublicForm() {
           © {new Date().getFullYear()} TEMPTECH · Soporte al Cliente
         </div>
       </div>
-
-      <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        * { box-sizing: border-box; }
-        input::placeholder, textarea::placeholder { color: ${T.text3}; }
-        select option { background: ${T.surface2}; color: ${T.text}; }
-      `}</style>
     </div>
   )
 }
