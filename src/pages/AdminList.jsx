@@ -6,14 +6,14 @@ import { supabase } from '../lib/supabase'
 const LOGO_URL = 'https://edddvxqlvwgexictsnmn.supabase.co/storage/v1/object/public/Imagenes/Imagen-Corporativa/Temptech_LogoHorizontal.png'
 
 const T = {
-  bg: '#1a1a1a', surface: '#242424', surface2: '#2d2d2d', surface3: '#363636',
-  border: '#3a3a3a', border2: '#444444',
+  bg: '#222222', surface: '#2b2b2b', surface2: '#333333', surface3: '#3d3d3d',
+  border: '#444444', border2: '#505050',
   grad: 'linear-gradient(135deg,#e8215a,#8b2fc9,#4a6cf7)',
-  text: '#f0f0f0', text2: '#a0a0a0', text3: '#666666',
-  green: '#3dd68c', greenDim: 'rgba(61,214,140,0.12)',
-  red: '#ff4d6d', redDim: 'rgba(255,77,109,0.12)',
-  yellow: '#ffd166', yellowDim: 'rgba(255,209,102,0.12)',
-  blue: '#6eb5ff', blueDim: 'rgba(110,181,255,0.12)',
+  text: '#ffffff', text2: '#cccccc', text3: '#888888',
+  green: '#3dd68c', greenDim: 'rgba(61,214,140,0.15)',
+  red: '#ff5577', redDim: 'rgba(255,85,119,0.15)',
+  yellow: '#ffd166', yellowDim: 'rgba(255,209,102,0.15)',
+  blue: '#6eb5ff', blueDim: 'rgba(110,181,255,0.15)',
   purple: '#b39dfa', orange: '#fb923c', teal: '#2dd4bf',
   font: "'Inter', -apple-system, sans-serif",
   radius: '10px', radiusLg: '16px',
@@ -89,7 +89,7 @@ async function subirArchivoAdmin(file, trackingId) {
 }
 
 const DEFAULT_RECHAZO = (trackingId = 'XXXXXXXXX') =>
-  `Por medio de la presente le comunicamos que en el día de la fecha se realizó el control de documentacion correspondiente al reclamo "${trackingId}" y el mismo no fue aprobado.\n\n***MOTIVO - FUERA DE GARANTÍA/NO APLICA GARANTÍA ---> Podemos ofrecerte el servicio de reparación de fábrica, para lo cual, deberás enviar el producto a Darragueira 1084, Valentin Alsina, CP 1822, Buenos Aires. Podés enviarlo a través de la logística que creas conveniente u acercarte a fábrica, donde lo revisarán y determinarán si es posible su reparación.`
+  `Por medio de la presente le comunicamos que en el día de la fecha se realizó el control de documentación correspondiente al reclamo "${trackingId}" y el mismo no fue aprobado.\n\nMOTIVO: FUERA DE GARANTÍA ---> Podemos ofrecerte el servicio de reparación de fábrica, para lo cual, deberás enviar el producto a Obon 1327, Valentín Alsina, CP 1822, Buenos Aires. Podés enviarlo a través de la logística que creas conveniente u acercarte a fábrica, donde lo revisarán y determinarán si es posible su reparación.\n\nMOTIVO: NO APLICA GARANTÍA ---> El producto sufrió modificaciones físicas que imposibilitan su reparación.`
 
 // ── Panel unificado Resolución / Devolución / Service ──
 function PanelEnvio({ item, tipo, onClose, onGuardar }) {
@@ -453,8 +453,8 @@ export default function AdminList() {
               const esDevolucion = item.estado === 'Devolucion'
               const aprobadoSI   = item.aprobado === 'SI'
 
-              // Desaprobar: bloqueado solo si cerrado o no aprobado
-              const desaprobarBloqueado = !aprobadoSI || esCerrado
+              // Desaprobar: habilitado cuando aprobado=SI y estado es Ingresado o pendiente
+              const desaprobarBloqueado = !aprobadoSI || esCerrado || esResolucion || esDevolucion || item.estado === 'Service'
 
               return (
                 <div key={item.id} style={{ background: T.surface, border: `1px solid ${aprobadoSI ? T.green + '40' : T.border}`, borderRadius: T.radiusLg, overflow: 'hidden', position: 'relative' }}>

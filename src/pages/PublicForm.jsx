@@ -2,12 +2,12 @@ import { useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 const T = {
-  bg: '#08090f', surface: '#111111', surface2: '#181818',
-  border: '#2a2a2a', border2: '#333333',
+  bg: '#222222', surface: '#2b2b2b', surface2: '#333333',
+  border: '#444444', border2: '#505050',
   grad: 'linear-gradient(135deg,#e8215a,#8b2fc9,#4a6cf7)',
-  text: '#eceef5', text2: '#8890aa', text3: '#4a5068',
-  red: '#ff4d6d', redDim: 'rgba(255,77,109,0.1)',
-  green: '#3dd68c', greenDim: 'rgba(61,214,140,0.1)',
+  text: '#ffffff', text2: '#cccccc', text3: '#888888',
+  red: '#ff5577', redDim: 'rgba(255,85,119,0.15)',
+  green: '#3dd68c', greenDim: 'rgba(61,214,140,0.15)',
   radius: '10px', radiusLg: '16px',
   font: "'Inter', -apple-system, sans-serif",
 }
