@@ -258,10 +258,8 @@ export default function PublicForm() {
         canal:               form.canal || null,
         vendedor:            form.vendedor.trim() || null,
         numero_venta_manual: form.ventaManual.trim() || null,
-        comprobante_url:     comprobantesUrls[0] || null,       // retrocompat
-        imagen_producto_url: imagenesUrls[0] || null,            // retrocompat
-        comprobantes_urls:   comprobantesUrls.filter(Boolean),
-        imagenes_producto_urls: imagenesUrls.filter(Boolean),
+        comprobante_url:     comprobantesUrls[0] || null,
+        imagen_producto_url: imagenesUrls[0] || null,
         producto:            form.producto,
         modelo:              form.modelo,
         motivo:              form.motivo,
@@ -311,7 +309,16 @@ export default function PublicForm() {
         input::placeholder, textarea::placeholder { color: ${T.text3}; }
         select option { background: ${T.surface2}; color: ${T.text}; }
         input[type="date"] { color-scheme: dark; color: ${T.text}; }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+          filter: brightness(0) invert(1);
+          opacity: 1;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 4px;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+          background: rgba(255,255,255,0.1);
+        }
       `}</style>
 
       <div style={{ maxWidth: 860, margin: '0 auto' }}>
