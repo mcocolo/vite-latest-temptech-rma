@@ -478,33 +478,75 @@ export default function AdminList() {
                     </div>
 
                     {/* Notas y archivos */}
-                    {(item.notas || item.motivo_rechazo || item.comprobante_url || item.imagen_producto_url || item.empresa_envio) && (
+                    {(item.notas || item.motivo_rechazo || item.comprobante_url || item.imagen_producto_url || item.empresa_envio || (item.comprobantes_urls?.length > 0) || (item.imagenes_producto_urls?.length > 0)) && (
                       <div style={{ margin: '0 22px 16px', padding: 14, background: T.surface2, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
                         {item.motivo_rechazo && <div style={{ fontSize: 13, color: T.red, marginBottom: 8 }}><strong>Motivo rechazo:</strong> {item.motivo_rechazo}</div>}
                         {item.empresa_envio && <InfoRow label="Empresa envío" value={item.empresa_envio} />}
                         {item.codigo_seguimiento && <InfoRow label="Código seguimiento" value={item.codigo_seguimiento} />}
                         {item.fecha_envio && <InfoRow label="Fecha envío" value={formatearFecha(item.fecha_envio)} />}
                         {item.notas && <div style={{ fontSize: 12, color: T.text3, whiteSpace: 'pre-line', marginTop: 8, borderTop: `1px solid ${T.border}`, paddingTop: 8 }}>{item.notas}</div>}
-                        {(item.comprobante_url || item.imagen_producto_url) && (
-                          <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
-                            {item.comprobante_url && (
-                              <div>
-                                <div style={{ fontSize: 11, color: T.text3, marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Comprobante</div>
-                                <a href={item.comprobante_url} target="_blank" rel="noreferrer">
-                                  <img src={item.comprobante_url} alt="Comprobante" style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: `1px solid ${T.border}` }} onError={e => e.currentTarget.style.display = 'none'} />
-                                </a>
+
+                        {/* Comprobantes — mostrar todos */}
+                        {(() => {
+                          const urls = item.comprobantes_urls?.length > 0
+                            ? item.comprobantes_urls
+                            : item.comprobante_url ? [item.comprobante_url] : []
+                          if (urls.length === 0) return null
+                          return (
+                            <div style={{ marginTop: 12 }}>
+                              <div style={{ fontSize: 11, color: T.text3, marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                                Comprobantes ({urls.length})
                               </div>
-                            )}
-                            {item.imagen_producto_url && (
-                              <div>
-                                <div style={{ fontSize: 11, color: T.text3, marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Imagen producto</div>
-                                <a href={item.imagen_producto_url} target="_blank" rel="noreferrer">
-                                  <img src={item.imagen_producto_url} alt="Producto" style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: `1px solid ${T.border}` }} onError={e => e.currentTarget.style.display = 'none'} />
-                                </a>
+                              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                {urls.map((url, i) => (
+                                  <a key={i} href={url} target="_blank" rel="noreferrer">
+                                    <img src={url} alt={`Comprobante ${i + 1}`}
+                                      style={{ width: 100, height: 70, objectFit: 'cover', borderRadius: 8, border: `1px solid ${T.border}` }}
+                                      onError={e => {
+                                        e.currentTarget.style.display = 'none'
+                                        e.currentTarget.nextSibling.style.display = 'flex'
+                                      }}
+                                    />
+                                    <div style={{ display: 'none', width: 100, height: 70, borderRadius: 8, border: `1px solid ${T.border}`, alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#7b9fff', textDecoration: 'underline', background: T.surface3 }}>
+                                      Ver archivo {i + 1}
+                                    </div>
+                                  </a>
+                                ))}
                               </div>
-                            )}
-                          </div>
-                        )}
+                            </div>
+                          )
+                        })()}
+
+                        {/* Imágenes del producto — mostrar todas */}
+                        {(() => {
+                          const urls = item.imagenes_producto_urls?.length > 0
+                            ? item.imagenes_producto_urls
+                            : item.imagen_producto_url ? [item.imagen_producto_url] : []
+                          if (urls.length === 0) return null
+                          return (
+                            <div style={{ marginTop: 12 }}>
+                              <div style={{ fontSize: 11, color: T.text3, marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                                Imágenes del producto ({urls.length})
+                              </div>
+                              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                {urls.map((url, i) => (
+                                  <a key={i} href={url} target="_blank" rel="noreferrer">
+                                    <img src={url} alt={`Producto ${i + 1}`}
+                                      style={{ width: 100, height: 70, objectFit: 'cover', borderRadius: 8, border: `1px solid ${T.border}` }}
+                                      onError={e => {
+                                        e.currentTarget.style.display = 'none'
+                                        e.currentTarget.nextSibling.style.display = 'flex'
+                                      }}
+                                    />
+                                    <div style={{ display: 'none', width: 100, height: 70, borderRadius: 8, border: `1px solid ${T.border}`, alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#7b9fff', textDecoration: 'underline', background: T.surface3 }}>
+                                      Ver archivo {i + 1}
+                                    </div>
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        })()}
                       </div>
                     )}
 

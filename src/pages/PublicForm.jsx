@@ -260,6 +260,8 @@ export default function PublicForm() {
         numero_venta_manual: form.ventaManual.trim() || null,
         comprobante_url:     comprobantesUrls[0] || null,
         imagen_producto_url: imagenesUrls[0] || null,
+        comprobantes_urls:   comprobantesUrls.filter(Boolean),
+        imagenes_producto_urls: imagenesUrls.filter(Boolean),
         producto:            form.producto,
         modelo:              form.modelo,
         motivo:              form.motivo,
