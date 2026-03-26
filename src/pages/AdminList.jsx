@@ -460,6 +460,8 @@ export default function AdminList() {
     await cargar()
     alert('Notificación de Service enviada ✅')
   }
+
+  async function cerrarCaso(item) {
     const texto = window.prompt('Nota para CERRAR:', '')
     if (texto === null) return
     const nuevaNota = armarLineaNota('CERRADO', texto)
