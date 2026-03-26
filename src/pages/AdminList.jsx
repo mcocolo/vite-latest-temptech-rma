@@ -91,7 +91,7 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
   const isDevolucion = tipo === 'Devolucion'
 
   const defaultTexto = isDevolucion
-    ? `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nTe adjuntamos la etiqueta para que nos realices la devolución de la unidad defectuosa en garantía.`
+    ? `Primero que nada, le pedimos disculpas por los inconvenientes ocasionados. Trabajamos día a día para brindarle el mejor producto y servicio. Estamos a su disposición para ayudarlo a resolverlo a la brevedad.\n\nTenemos que gestionar el cambio de la unidad.\nTe indicamos los pasos a seguir:\n\nTe enviaremos una etiqueta de correo argentino que deberás adherir a la caja del producto que falla y despacharlo en la sucursal de correo ubicada en\nPILAR UP 21 | AV LUIS LAGOMARSINO 905. Buenos aires.\n\nLuego de despacharlo, te pediremos que nos envíes el comprobante de dicho despacho para que podamos activar el reenvío de una unidad nueva.\n\nLEER IMPORTANTE: Conservar el kit de instalación (no despacharlo con la unidad defectuosa) para poder utilizar con esta nueva unidad*\n\nAguardamos confirmación para poder enviarte la etiqueta.`
     : `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados. A continuación le dejamos los datos para el seguimiento de su envío.`
 
   const [empresa, setEmpresa]       = useState(item.empresa_envio || 'Correo Argentino')
