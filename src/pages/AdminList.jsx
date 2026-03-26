@@ -6,15 +6,15 @@ import { supabase } from '../lib/supabase'
 const LOGO_URL = 'https://edddvxqlvwgexictsnmn.supabase.co/storage/v1/object/public/Imagenes/Imagen-Corporativa/Temptech_LogoHorizontal.png'
 
 const T = {
-  bg: '#08090f', surface: '#111111', surface2: '#181818', surface3: '#202020',
-  border: '#2a2a2a', border2: '#333333',
+  bg: '#1a1a1a', surface: '#242424', surface2: '#2d2d2d', surface3: '#363636',
+  border: '#3a3a3a', border2: '#444444',
   grad: 'linear-gradient(135deg,#e8215a,#8b2fc9,#4a6cf7)',
-  text: '#eceef5', text2: '#8890aa', text3: '#4a5068',
+  text: '#f0f0f0', text2: '#a0a0a0', text3: '#666666',
   green: '#3dd68c', greenDim: 'rgba(61,214,140,0.12)',
   red: '#ff4d6d', redDim: 'rgba(255,77,109,0.12)',
   yellow: '#ffd166', yellowDim: 'rgba(255,209,102,0.12)',
-  blue: '#4a9eff', blueDim: 'rgba(74,158,255,0.12)',
-  purple: '#a78bfa', orange: '#fb923c',
+  blue: '#6eb5ff', blueDim: 'rgba(110,181,255,0.12)',
+  purple: '#b39dfa', orange: '#fb923c', teal: '#2dd4bf',
   font: "'Inter', -apple-system, sans-serif",
   radius: '10px', radiusLg: '16px',
 }
@@ -24,6 +24,7 @@ const STATUS_CONFIG = {
   'pendiente':  { color: T.yellow, bg: T.yellowDim,                    label: 'Pendiente' },
   'Resolucion': { color: T.purple, bg: 'rgba(167,139,250,0.12)',       label: 'Resolución' },
   'Devolucion': { color: T.orange, bg: 'rgba(251,146,60,0.12)',        label: 'Devolución' },
+  'Service':    { color: T.teal,   bg: 'rgba(45,212,191,0.12)',        label: 'Service' },
   'rechazado':  { color: T.red,    bg: T.redDim,                       label: 'Rechazado' },
   'cerrado':    { color: T.text3,  bg: T.surface2,                     label: 'Cerrado' },
 }
@@ -46,6 +47,7 @@ function Btn({ children, onClick, disabled, variant = 'ghost' }) {
     danger:  { bg: T.redDim,   color: T.red,      border: `1px solid ${T.red}40` },
     warn:    { bg: T.yellowDim,color: T.yellow,   border: `1px solid ${T.yellow}40` },
     orange:  { bg: 'rgba(251,146,60,0.12)', color: T.orange, border: `1px solid rgba(251,146,60,0.35)` },
+    teal:    { bg: 'rgba(45,212,191,0.12)', color: T.teal,   border: `1px solid rgba(45,212,191,0.35)` },
   }
   const v = variants[variant] || variants.ghost
   return (
@@ -86,12 +88,18 @@ async function subirArchivoAdmin(file, trackingId) {
   return data.publicUrl
 }
 
-// ── Panel unificado Resolución / Devolución ──
+const DEFAULT_RECHAZO = (trackingId = 'XXXXXXXXX') =>
+  `Por medio de la presente le comunicamos que en el día de la fecha se realizó el control de documentacion correspondiente al reclamo "${trackingId}" y el mismo no fue aprobado.\n\n***MOTIVO - FUERA DE GARANTÍA/NO APLICA GARANTÍA ---> Podemos ofrecerte el servicio de reparación de fábrica, para lo cual, deberás enviar el producto a Darragueira 1084, Valentin Alsina, CP 1822, Buenos Aires. Podés enviarlo a través de la logística que creas conveniente u acercarte a fábrica, donde lo revisarán y determinarán si es posible su reparación.`
+
+// ── Panel unificado Resolución / Devolución / Service ──
 function PanelEnvio({ item, tipo, onClose, onGuardar }) {
   const isDevolucion = tipo === 'Devolucion'
+  const isService    = tipo === 'Service'
 
   const defaultTexto = isDevolucion
     ? `Primero que nada, le pedimos disculpas por los inconvenientes ocasionados. Trabajamos día a día para brindarle el mejor producto y servicio. Estamos a su disposición para ayudarlo a resolverlo a la brevedad.\n\nTenemos que gestionar el cambio de la unidad.\nTe indicamos los pasos a seguir:\n\nTe enviaremos una etiqueta de correo argentino que deberás adherir a la caja del producto que falla y despacharlo en la sucursal de correo ubicada en\nPILAR UP 21 | AV LUIS LAGOMARSINO 905. Buenos aires.\n\nLuego de despacharlo, te pediremos que nos envíes el comprobante de dicho despacho para que podamos activar el reenvío de una unidad nueva.\n\nLEER IMPORTANTE: Conservar el kit de instalación (no despacharlo con la unidad defectuosa) para poder utilizar con esta nueva unidad*\n\nAguardamos confirmación para poder enviarte la etiqueta.`
+    : isService
+    ? ``
     : `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados. A continuación le dejamos los datos para el seguimiento de su envío.`
 
   const [empresa, setEmpresa]       = useState(item.empresa_envio || 'Correo Argentino')
@@ -105,9 +113,9 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
   const addAdjuntos    = (files) => setAdjuntos(prev => [...prev, ...files])
   const removeAdjunto  = (idx)   => setAdjuntos(prev => prev.filter((_, i) => i !== idx))
 
-  const color     = isDevolucion ? T.orange : T.purple
-  const colorBg   = isDevolucion ? 'rgba(251,146,60,0.08)'   : 'rgba(167,139,250,0.08)'
-  const colorBord = isDevolucion ? 'rgba(251,146,60,0.3)'    : 'rgba(167,139,250,0.3)'
+  const color     = isDevolucion ? T.orange : isService ? T.teal : T.purple
+  const colorBg   = isDevolucion ? 'rgba(251,146,60,0.08)' : isService ? 'rgba(45,212,191,0.08)' : 'rgba(167,139,250,0.08)'
+  const colorBord = isDevolucion ? 'rgba(251,146,60,0.3)'  : isService ? 'rgba(45,212,191,0.3)'  : 'rgba(167,139,250,0.3)'
 
   async function handleGuardar() {
     if (!isDevolucion) {
@@ -137,11 +145,11 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
   return (
     <div style={{ margin: '0 22px 18px', padding: 18, background: colorBg, border: `1px solid ${colorBord}`, borderRadius: T.radius }}>
       <div style={{ fontSize: 13, fontWeight: 700, color, marginBottom: 16 }}>
-        {isDevolucion ? '📦 Datos de devolución' : '🚚 Datos de resolución'}
+        {isDevolucion ? '📦 Datos de devolución' : isService ? '🔧 Service' : '🚚 Datos de resolución'}
       </div>
 
       {/* Empresa + código/fecha — solo Resolución */}
-      {!isDevolucion && (
+      {!isDevolucion && !isService && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <div>
             <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Empresa</label>
@@ -165,8 +173,8 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
         </div>
       )}
 
-      {/* Adjuntos múltiples — solo Devolución */}
-      {isDevolucion && (
+      {/* Adjuntos múltiples — Devolución y Service */}
+      {(isDevolucion || isService) && (
         <div style={{ marginBottom: 12 }}>
           <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
             Adjuntar archivos (etiqueta, instrucciones, etc.)
@@ -214,7 +222,7 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
       </div>
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <Btn variant={isDevolucion ? 'orange' : 'primary'} onClick={handleGuardar} disabled={subiendo}>
+        <Btn variant={isDevolucion ? 'orange' : isService ? 'teal' : 'primary'} onClick={handleGuardar} disabled={subiendo}>
           {subiendo ? 'Subiendo archivos...' : 'Guardar y enviar email'}
         </Btn>
         <Btn onClick={onClose}>Cancelar</Btn>
@@ -298,7 +306,21 @@ export default function AdminList() {
     const { error } = await supabase.from('devoluciones').update({ aprobado: 'NO', estado: 'rechazado', motivo_rechazo: motivo, fecha_aprobado: null, fecha_desaprobado: new Date().toISOString(), notas: unirNotas(item.notas, nuevaNota) }).eq('id', item.id)
     if (error) { alert('No se pudo rechazar el caso'); return }
     try {
-      const resp = await fetch('/api/enviar-rechazo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: (item.email || '').trim(), nombre: item.nombre_apellido || '', apellido: '', tracking_id: item.tracking_id || '', motivo, producto: item.producto || '', modelo: item.modelo || '' }) })
+      const resp = await fetch('/api/enviar-rechazo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: (item.email || '').trim(),
+          nombre: item.nombre_apellido || '',
+          apellido: '',
+          tracking_id: item.tracking_id || '',
+          motivo,
+          // Pasamos el texto completo editable para que el email lo use
+          textoCompleto: motivo,
+          producto: item.producto || '',
+          modelo: item.modelo || '',
+        }),
+      })
       const data = await resp.json().catch(() => ({}))
       if (!resp.ok) alert(`Error mail rechazo: ${data.detalle || data.error}`)
     } catch { alert('Se rechazó, pero falló el envío del mail') }
@@ -403,6 +425,7 @@ export default function AdminList() {
               <option value="pendiente">Pendiente</option>
               <option value="Resolucion">Resolución</option>
               <option value="Devolucion">Devolución</option>
+              <option value="Service">Service</option>
               <option value="rechazado">Rechazado</option>
               <option value="cerrado">Cerrado</option>
             </select>
@@ -555,31 +578,31 @@ export default function AdminList() {
                       <Btn onClick={() => cambiarEstado(item, 'pendiente')} disabled={esCerrado}>Pendiente</Btn>
                       <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Resolucion' })} disabled={!aprobadoSI} variant="primary">🚚 Resolución</Btn>
                       <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Devolucion' })} disabled={!aprobadoSI} variant="orange">📦 Devolución</Btn>
+                      <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Service' })} disabled={!aprobadoSI} variant="teal">🔧 Service</Btn>
                       <Btn onClick={() => marcarAprobado(item)} disabled={aprobadoSI} variant="success">✓ Aprobar</Btn>
-                      <Btn
-                        onClick={() => handleDesaprobar(item)}
-                        disabled={desaprobarBloqueado}
-                        variant="warn"
-                      >
-                        Desaprobar
-                      </Btn>
-                      <Btn onClick={() => { setRechazoAbiertoId(item.id); setTextoRechazo(item.motivo_rechazo || '') }} disabled={esCerrado} variant="danger">Rechazar</Btn>
+                      <Btn onClick={() => handleDesaprobar(item)} disabled={desaprobarBloqueado} variant="warn">Desaprobar</Btn>
+                      <Btn onClick={() => { setRechazoAbiertoId(item.id); setTextoRechazo(item.motivo_rechazo || DEFAULT_RECHAZO(item.tracking_id)) }} disabled={esCerrado} variant="danger">Rechazar</Btn>
                       <Btn onClick={() => cerrarCaso(item)}>Cerrar</Btn>
                     </div>
 
-                    {/* Panel rechazo */}
+                    {/* Panel rechazo — texto editable + envío email */}
                     {rechazoAbiertoId === item.id && (
                       <div style={{ margin: '0 22px 18px', padding: 16, background: T.redDim, border: `1px solid ${T.red}40`, borderRadius: T.radius }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: T.red, marginBottom: 10 }}>Motivo de rechazo</div>
-                        <textarea value={textoRechazo} onChange={e => setTextoRechazo(e.target.value)} rows={3} style={{ width: '100%', background: T.surface, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, resize: 'vertical', outline: 'none', marginBottom: 10 }} placeholder="Escribí por qué se rechaza este caso" />
+                        <div style={{ fontSize: 13, fontWeight: 600, color: T.red, marginBottom: 10 }}>Motivo de rechazo (editable)</div>
+                        <textarea
+                          value={textoRechazo}
+                          onChange={e => setTextoRechazo(e.target.value)}
+                          rows={8}
+                          style={{ width: '100%', background: T.surface, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '10px 12px', color: T.text, fontSize: 13, fontFamily: T.font, resize: 'vertical', outline: 'none', marginBottom: 10, lineHeight: 1.7 }}
+                        />
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <Btn variant="danger" onClick={() => rechazarCaso(item)}>Confirmar rechazo</Btn>
+                          <Btn variant="danger" onClick={() => rechazarCaso(item)}>Confirmar y enviar email</Btn>
                           <Btn onClick={() => { setRechazoAbiertoId(null); setTextoRechazo('') }}>Cancelar</Btn>
                         </div>
                       </div>
                     )}
 
-                    {/* Panel resolución / devolución */}
+                    {/* Panel resolución / devolución / service */}
                     {panelAbierto?.id === item.id && (
                       <PanelEnvio
                         item={item}
