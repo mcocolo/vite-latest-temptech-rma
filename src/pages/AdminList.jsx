@@ -408,8 +408,8 @@ export default function AdminList() {
       <header style={{ background: T.surface, borderBottom: `1px solid ${T.border}`, padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ height: 3, width: 32, background: T.grad, borderRadius: 2 }} />
-          <img src={LOGO_URL} alt="TEMPTECH" style={{ height: 24, objectFit: 'contain' }} onError={e => e.currentTarget.style.display = 'none'} />
-          <span style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 700, color: T.text2 }}>Panel Admin</span>
+          <img src={LOGO_URL} alt="TEMPTECH" style={{ height: 24, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} onError={e => e.currentTarget.style.display = 'none'} />
+          <span style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, fontWeight: 700, color: T.text }}>Panel Admin</span>
         </div>
         <button onClick={cerrarSesion} style={{ background: T.redDim, color: T.red, border: `1px solid ${T.red}40`, borderRadius: T.radius, padding: '7px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: T.font }}>Cerrar sesión</button>
       </header>

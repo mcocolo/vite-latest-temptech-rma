@@ -91,7 +91,7 @@ function Input({ label, span, ...props }) {
       {label && <Label>{label}</Label>}
       <input
         style={inputBase}
-        onFocus={e => e.target.style.borderColor = '#4a6cf7'}
+        onFocus={e => e.target.style.borderColor = '#aaaaaa'}
         onBlur={e => e.target.style.borderColor = T.border}
         {...props}
       />
@@ -112,7 +112,7 @@ function Textarea({ label, span, ...props }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0, ...(span ? { gridColumn: span } : {}) }}>
       {label && <Label>{label}</Label>}
-      <textarea style={{ ...inputBase, minHeight: 110, resize: 'vertical' }} onFocus={e => e.target.style.borderColor = '#4a6cf7'} onBlur={e => e.target.style.borderColor = T.border} {...props} />
+      <textarea style={{ ...inputBase, minHeight: 110, resize: 'vertical' }} onFocus={e => e.target.style.borderColor = '#aaaaaa'} onBlur={e => e.target.style.borderColor = T.border} {...props} />
     </div>
   )
 }
@@ -157,7 +157,7 @@ function MultiFileInput({ label, span, files, onAdd, onRemove, accept }) {
         padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center',
         gap: 8, fontSize: 13, color: T.text2, transition: 'border .2s', userSelect: 'none',
       }}
-        onMouseEnter={e => e.currentTarget.style.borderColor = '#4a6cf7'}
+        onMouseEnter={e => e.currentTarget.style.borderColor = '#aaaaaa'}
         onMouseLeave={e => e.currentTarget.style.borderColor = T.border2}
       >
         <span style={{ fontSize: 18 }}>📎</span>

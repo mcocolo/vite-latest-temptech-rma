@@ -66,7 +66,7 @@ export default function Login() {
       <div style={{ width: '100%', maxWidth: 400, position: 'relative', zIndex: 1 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src={LOGO_URL} alt="TEMPTECH" style={{ height: 38, objectFit: 'contain' }} onError={e => e.currentTarget.style.display = 'none'} />
+          <img src={LOGO_URL} alt="TEMPTECH" style={{ height: 38, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} onError={e => e.currentTarget.style.display = 'none'} />
         </div>
 
         {/* Línea degradado */}
