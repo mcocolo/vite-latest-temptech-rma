@@ -99,7 +99,7 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
   const defaultTexto = isDevolucion
     ? `Primero que nada, le pedimos disculpas por los inconvenientes ocasionados. Trabajamos día a día para brindarle el mejor producto y servicio. Estamos a su disposición para ayudarlo a resolverlo a la brevedad.\n\nTenemos que gestionar el cambio de la unidad.\nTe indicamos los pasos a seguir:\n\nTe enviaremos una etiqueta de correo argentino que deberás adherir a la caja del producto que falla y despacharlo en la sucursal de correo ubicada en\nPILAR UP 21 | AV LUIS LAGOMARSINO 905. Buenos aires.\n\nLuego de despacharlo, te pediremos que nos envíes el comprobante de dicho despacho para que podamos activar el reenvío de una unidad nueva.\n\nLEER IMPORTANTE: Conservar el kit de instalación (no despacharlo con la unidad defectuosa) para poder utilizar con esta nueva unidad*\n\nAguardamos confirmación para poder enviarte la etiqueta.`
     : isService
-    ? ``
+    ? `Nos pondremos en contacto para indicarte la fecha de cambio del producto.\nPara realizar el cambio, un miembro de nuestra logística le entregará una unidad de reemplazo para que pueda utilizar mientras realizamos la reparación de su producto.\nSolicitamos por favor, ser tan amable, el día de cambio tener el equipo listo para ser retirado y entregar sólo el Panel, es decir, conservar el kit de instalación (y sus respectivas patas en el caso de corresponder) para ser utilizadas con la unidad de reemplazo.\n\nSaludos.\nEquipo Soporte TEMPTECH`
     : `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados. A continuación le dejamos los datos para el seguimiento de su envío.`
 
   const [empresa, setEmpresa]       = useState(item.empresa_envio || 'Correo Argentino')
@@ -231,6 +231,55 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
   )
 }
 
+// ── Panel Notificar Service ──
+function PanelNotificarService({ item, onClose, onGuardar }) {
+  const [fechaVisita, setFechaVisita] = useState('')
+  const defaultTexto = (fecha) =>
+    `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nLe informamos que el día "${fecha || '[FECHA]'}" estaremos realizando el retiro de la unidad y la entrega de un reemplazo. Recuerde el día del cambio tener el equipo listo para ser retirado y entregar sólo el Panel, es decir, conservar el kit de instalación (y sus respectivas patas en el caso de corresponder) para ser utilizadas con la nueva de reemplazo.`
+  const [textoEmail, setTextoEmail] = useState(defaultTexto(''))
+
+  // Actualizar texto cuando cambia la fecha
+  const handleFecha = (val) => {
+    setFechaVisita(val)
+    const fechaFormateada = val ? new Date(val + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '[FECHA]'
+    setTextoEmail(defaultTexto(fechaFormateada))
+  }
+
+  return (
+    <div style={{ margin: '0 22px 18px', padding: 18, background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.3)', borderRadius: T.radius }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: T.teal, marginBottom: 16 }}>📅 Notificar fecha de Service</div>
+
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Fecha de visita</label>
+        <input
+          type="date"
+          value={fechaVisita}
+          onChange={e => handleFecha(e.target.value)}
+          style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, outline: 'none', colorScheme: 'dark', width: 200 }}
+        />
+      </div>
+
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Texto del email (editable)</label>
+        <textarea
+          value={textoEmail}
+          onChange={e => setTextoEmail(e.target.value)}
+          rows={7}
+          style={{ width: '100%', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '10px 12px', color: T.text2, fontSize: 12, fontFamily: T.font, resize: 'vertical', outline: 'none', lineHeight: 1.7 }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Btn variant="teal" onClick={() => {
+          if (!fechaVisita) { alert('Seleccioná la fecha de visita'); return }
+          onGuardar({ fechaVisita, textoEmail })
+        }}>Guardar y enviar email</Btn>
+        <Btn onClick={onClose}>Cancelar</Btn>
+      </div>
+    </div>
+  )
+}
+
 export default function AdminList() {
   const [busquedaTracking, setBusquedaTracking] = useState('')
   const [datos, setDatos]             = useState([])
@@ -240,7 +289,8 @@ export default function AdminList() {
   const [rechazoAbiertoId, setRechazoAbiertoId] = useState(null)
   const [textoRechazo, setTextoRechazo]         = useState('')
   const [notaRechazo, setNotaRechazo]           = useState('')
-  const [panelAbierto, setPanelAbierto] = useState(null) // { id, tipo }
+  const [panelAbierto, setPanelAbierto]         = useState(null)
+  const [notificarServiceId, setNotificarServiceId] = useState(null)
   const navigate = useNavigate()
 
   const datosFiltrados = datos.filter(item => !busquedaTracking || item.tracking_id?.toLowerCase().includes(busquedaTracking.toLowerCase()))
@@ -380,7 +430,36 @@ export default function AdminList() {
     alert(`${tipo === 'Devolucion' ? 'Devolución' : 'Resolución'} guardada y email enviado ✅`)
   }
 
-  async function cerrarCaso(item) {
+  async function guardarNotificarService(item, { fechaVisita, textoEmail }) {
+    const notaTexto = window.prompt('Nota para NOTIFICAR SERVICE:', '')
+    if (notaTexto === null) return
+    const nuevaNota = armarLineaNota('NOTIFICAR SERVICE', notaTexto)
+
+    const { error } = await supabase.from('devoluciones').update({
+      fecha_resolucion: new Date().toISOString(),
+      notas: unirNotas(item.notas, nuevaNota),
+    }).eq('id', item.id)
+    if (error) { alert('Error al guardar'); return }
+
+    try {
+      const { error: emailError } = await supabase.functions.invoke('enviar-email-resolucion', {
+        body: {
+          to: String(item.email || '').trim(),
+          subject: `TEMPTECH - Notificación de Service ${item.tracking_id}`,
+          text: textoEmail,
+          tracking_id: item.tracking_id || '',
+          empresa: 'Logistica Propia',
+          tracking: '',
+          fecha: fechaVisita,
+        },
+      })
+      if (emailError) alert(`Se guardó pero falló el email: ${emailError.message}`)
+    } catch (err) { alert(`Error al enviar email: ${err.message}`) }
+
+    setNotificarServiceId(null)
+    await cargar()
+    alert('Notificación de Service enviada ✅')
+  }
     const texto = window.prompt('Nota para CERRAR:', '')
     if (texto === null) return
     const nuevaNota = armarLineaNota('CERRADO', texto)
@@ -588,6 +667,9 @@ export default function AdminList() {
                       <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Resolucion' })} disabled={!aprobadoSI} variant="primary">🚚 Resolución</Btn>
                       <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Devolucion' })} disabled={!aprobadoSI} variant="orange">📦 Devolución</Btn>
                       <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Service' })} disabled={esCerrado} variant="teal">🔧 Service</Btn>
+                      {item.estado === 'Service' && (
+                        <Btn onClick={() => setNotificarServiceId(item.id)} disabled={esCerrado} variant="teal">📅 Notificar Service</Btn>
+                      )}
                       <Btn onClick={() => marcarAprobado(item)} disabled={aprobadoSI} variant="success">✓ Aprobar</Btn>
                       <Btn onClick={() => handleDesaprobar(item)} disabled={desaprobarBloqueado} variant="warn">Desaprobar</Btn>
                       <Btn onClick={() => { setRechazoAbiertoId(item.id); setTextoRechazo(item.motivo_rechazo || DEFAULT_RECHAZO(item.tracking_id)); setNotaRechazo('') }} disabled={esCerrado} variant="danger">Rechazar</Btn>
@@ -618,6 +700,15 @@ export default function AdminList() {
                         tipo={panelAbierto.tipo}
                         onClose={() => setPanelAbierto(null)}
                         onGuardar={(datos) => guardarEnvio(item, datos)}
+                      />
+                    )}
+
+                    {/* Panel notificar service */}
+                    {notificarServiceId === item.id && (
+                      <PanelNotificarService
+                        item={item}
+                        onClose={() => setNotificarServiceId(null)}
+                        onGuardar={(datos) => guardarNotificarService(item, datos)}
                       />
                     )}
                   </div>
