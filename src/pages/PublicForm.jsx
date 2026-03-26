@@ -328,7 +328,7 @@ export default function PublicForm() {
 
       <div style={{ maxWidth: 860, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src={LOGO_URL} alt="TEMPTECH" style={{ height: 42, objectFit: 'contain', marginBottom: 16 }} onError={e => e.currentTarget.style.display = 'none'} />
+          <img src={LOGO_URL} alt="TEMPTECH" style={{ height: 50, objectFit: 'contain', marginBottom: 16, filter: 'brightness(0) invert(1)' }} onError={e => e.currentTarget.style.display = 'none'} />
           <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 28, fontWeight: 800, color: T.text, margin: 0 }}>Portal de Soporte</h1>
           <p style={{ color: T.text2, marginTop: 8, fontSize: 14 }}>Registrá tu solicitud de garantía o devolución</p>
         </div>
