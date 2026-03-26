@@ -238,7 +238,8 @@ export default function AdminList() {
   const [filtroEstado, setFiltroEstado] = useState('Ingresado')
   const [errorTexto, setErrorTexto]   = useState('')
   const [rechazoAbiertoId, setRechazoAbiertoId] = useState(null)
-  const [textoRechazo, setTextoRechazo] = useState('')
+  const [textoRechazo, setTextoRechazo]         = useState('')
+  const [notaRechazo, setNotaRechazo]           = useState('')
   const [panelAbierto, setPanelAbierto] = useState(null) // { id, tipo }
   const navigate = useNavigate()
 
@@ -300,10 +301,15 @@ export default function AdminList() {
 
   async function rechazarCaso(item) {
     if (item.estado === 'cerrado') return
-    if (!textoRechazo?.trim()) { alert('Ingresá el motivo del rechazo'); return }
+    if (!textoRechazo?.trim()) { alert('Ingresá el texto del email de rechazo'); return }
     const motivo = textoRechazo.trim()
-    const nuevaNota = armarLineaNota('RECHAZADO', motivo)
-    const { error } = await supabase.from('devoluciones').update({ aprobado: 'NO', estado: 'rechazado', motivo_rechazo: motivo, fecha_aprobado: null, fecha_desaprobado: new Date().toISOString(), notas: unirNotas(item.notas, nuevaNota) }).eq('id', item.id)
+    const nota   = notaRechazo.trim() || motivo
+    const nuevaNota = armarLineaNota('RECHAZADO', nota)
+    const { error } = await supabase.from('devoluciones').update({
+      aprobado: 'NO', estado: 'rechazado', motivo_rechazo: motivo,
+      fecha_aprobado: null, fecha_desaprobado: new Date().toISOString(),
+      notas: unirNotas(item.notas, nuevaNota),
+    }).eq('id', item.id)
     if (error) { alert('No se pudo rechazar el caso'); return }
     try {
       const resp = await fetch('/api/enviar-rechazo', {
@@ -312,10 +318,7 @@ export default function AdminList() {
         body: JSON.stringify({
           to: (item.email || '').trim(),
           nombre: item.nombre_apellido || '',
-          apellido: '',
           tracking_id: item.tracking_id || '',
-          motivo,
-          // Pasamos el texto completo editable para que el email lo use
           textoCompleto: motivo,
           producto: item.producto || '',
           modelo: item.modelo || '',
@@ -324,7 +327,9 @@ export default function AdminList() {
       const data = await resp.json().catch(() => ({}))
       if (!resp.ok) alert(`Error mail rechazo: ${data.detalle || data.error}`)
     } catch { alert('Se rechazó, pero falló el envío del mail') }
-    setRechazoAbiertoId(null); setTextoRechazo('')
+    setRechazoAbiertoId(null)
+    setTextoRechazo('')
+    setNotaRechazo('')
     await cargar()
   }
 
@@ -577,26 +582,48 @@ export default function AdminList() {
                       <Btn onClick={() => cambiarEstado(item, 'pendiente')} disabled={esCerrado}>Pendiente</Btn>
                       <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Resolucion' })} disabled={!aprobadoSI} variant="primary">🚚 Resolución</Btn>
                       <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Devolucion' })} disabled={!aprobadoSI} variant="orange">📦 Devolución</Btn>
-                      <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Service' })} disabled={!aprobadoSI} variant="teal">🔧 Service</Btn>
+                      <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Service' })} disabled={esCerrado} variant="teal">🔧 Service</Btn>
                       <Btn onClick={() => marcarAprobado(item)} disabled={aprobadoSI} variant="success">✓ Aprobar</Btn>
                       <Btn onClick={() => handleDesaprobar(item)} disabled={desaprobarBloqueado} variant="warn">Desaprobar</Btn>
-                      <Btn onClick={() => { setRechazoAbiertoId(item.id); setTextoRechazo(item.motivo_rechazo || DEFAULT_RECHAZO(item.tracking_id)) }} disabled={esCerrado} variant="danger">Rechazar</Btn>
+                      <Btn onClick={() => { setRechazoAbiertoId(item.id); setTextoRechazo(item.motivo_rechazo || DEFAULT_RECHAZO(item.tracking_id)); setNotaRechazo('') }} disabled={esCerrado} variant="danger">Rechazar</Btn>
                       <Btn onClick={() => cerrarCaso(item)}>Cerrar</Btn>
                     </div>
 
-                    {/* Panel rechazo — texto editable + envío email */}
+                    {/* Panel rechazo — nota interna + texto email editable */}
                     {rechazoAbiertoId === item.id && (
                       <div style={{ margin: '0 22px 18px', padding: 16, background: T.redDim, border: `1px solid ${T.red}40`, borderRadius: T.radius }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: T.red, marginBottom: 10 }}>Motivo de rechazo (editable)</div>
-                        <textarea
-                          value={textoRechazo}
-                          onChange={e => setTextoRechazo(e.target.value)}
-                          rows={8}
-                          style={{ width: '100%', background: T.surface, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '10px 12px', color: T.text, fontSize: 13, fontFamily: T.font, resize: 'vertical', outline: 'none', marginBottom: 10, lineHeight: 1.7 }}
-                        />
+                        <div style={{ fontSize: 13, fontWeight: 600, color: T.red, marginBottom: 14 }}>Rechazar caso</div>
+
+                        {/* Nota interna — queda registrada con fecha */}
+                        <div style={{ marginBottom: 12 }}>
+                          <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                            Nota interna (queda registrada con fecha)
+                          </label>
+                          <input
+                            type="text"
+                            value={notaRechazo}
+                            onChange={e => setNotaRechazo(e.target.value)}
+                            placeholder="Ej: Fuera de garantía, producto con daño físico"
+                            style={{ width: '100%', background: T.surface, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '9px 12px', color: T.text, fontSize: 13, fontFamily: T.font, outline: 'none' }}
+                          />
+                        </div>
+
+                        {/* Texto email editable */}
+                        <div style={{ marginBottom: 12 }}>
+                          <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                            Texto del email al cliente (editable)
+                          </label>
+                          <textarea
+                            value={textoRechazo}
+                            onChange={e => setTextoRechazo(e.target.value)}
+                            rows={8}
+                            style={{ width: '100%', background: T.surface, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '10px 12px', color: T.text, fontSize: 13, fontFamily: T.font, resize: 'vertical', outline: 'none', lineHeight: 1.7 }}
+                          />
+                        </div>
+
                         <div style={{ display: 'flex', gap: 8 }}>
                           <Btn variant="danger" onClick={() => rechazarCaso(item)}>Confirmar y enviar email</Btn>
-                          <Btn onClick={() => { setRechazoAbiertoId(null); setTextoRechazo('') }}>Cancelar</Btn>
+                          <Btn onClick={() => { setRechazoAbiertoId(null); setTextoRechazo(''); setNotaRechazo('') }}>Cancelar</Btn>
                         </div>
                       </div>
                     )}
