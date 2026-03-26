@@ -1,6 +1,30 @@
 import { useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
+// ── CSS variables inyectadas inline como objeto de estilos base ──
+const T = {
+  bg:        '#08090f',
+  surface:   '#111111',
+  surface2:  '#181818',
+  border:    '#2a2a2a',
+  border2:   '#333333',
+  accent:    '#2a45c9',
+  accentDim: 'rgba(42,69,201,0.1)',
+  grad:      'linear-gradient(135deg,#e8215a,#8b2fc9,#4a6cf7)',
+  text:      '#eceef5',
+  text2:     '#8890aa',
+  text3:     '#4a5068',
+  red:       '#ff4d6d',
+  redDim:    'rgba(255,77,109,0.1)',
+  green:     '#3dd68c',
+  greenDim:  'rgba(61,214,140,0.1)',
+  radius:    '10px',
+  radiusLg:  '16px',
+  font:      "'Inter', -apple-system, sans-serif",
+}
+
+const LOGO_URL = 'https://edddvxqlvwgexictsnmn.supabase.co/storage/v1/object/public/Imagenes/Imagen-Corporativa/Temptech_LogoHorizontal.png'
+
 const productos = [
   'Panel Calefactor Slim',
   'Panel Calefactor Firenze',
@@ -17,7 +41,7 @@ const modelosPorProducto = {
     'Panel Calefactor Slim 250W Madera Blanca',
     'Panel Calefactor Slim 500W',
     'Panel Calefactor Slim 500W Toallero Simple',
-    'Panel Calefactor Slim500W Toallero Doble',
+    'Panel Calefactor Slim 500W Toallero Doble',
     'Panel Calefactor Slim 500W Madera Blanca',
   ],
   'Panel Calefactor Firenze': [
@@ -37,107 +61,37 @@ const modelosPorProducto = {
 
 const motivosPorProducto = {
   'Panel Calefactor Slim': [
-    'No calienta',
-    'Detalle de pintura',
-    'Detalle en terminacion',
-    'Falla en Tecla',
-    'No enciende el led de Tecla',
-    'Golpe de transporte',
-    'Faltante de Kit o piezas',
-    'Falta de patas Firenze',
-    'Marco mal terminado',
-    'Ruido',
-    'Medida barral incorrecta',
-    'Cambio comercial',
-    'Envío Incorrecto',
-    'Otro',
+    'No calienta','Detalle de pintura','Detalle en terminacion','Falla en Tecla',
+    'No enciende el led de Tecla','Golpe de transporte','Faltante de Kit o piezas',
+    'Falta de patas Firenze','Marco mal terminado','Ruido','Medida barral incorrecta',
+    'Cambio comercial','Envío Incorrecto','Otro',
   ],
   'Panel Calefactor Firenze': [
-    'No calienta',
-    'Detalle de pintura',
-    'Detalle en terminacion',
-    'Falla en Tecla',
-    'No enciende el led de Tecla',
-    'Golpe de transporte',
-    'Faltante de Kit o piezas',
-    'Falta de patas Firenze',
-    'Marco mal terminado',
-    'Ruido',
-    'Medida barral incorrecta',
-    'Cambio comercial',
-    'Envío Incorrecto',
-    'Otro',
-    'No funciona el termostato',
+    'No calienta','Detalle de pintura','Detalle en terminacion','Falla en Tecla',
+    'No enciende el led de Tecla','Golpe de transporte','Faltante de Kit o piezas',
+    'Falta de patas Firenze','Marco mal terminado','Ruido','Medida barral incorrecta',
+    'Cambio comercial','Envío Incorrecto','Otro','No funciona el termostato',
   ],
-  Calefones: [
-    'No calienta agua',
-    'Pierde agua',
-    'Falla eléctrica',
-    'Error instalación',
-    'Golpe transporte',
-  ],
-  Calderas: [
-    'No enciende',
-    'Falla electrónica',
-    'Error instalación',
-    'Golpe transporte',
-  ],
-  Accesorios: ['Medida incorrecta', 'Golpe transporte', 'Producto equivocado'],
+  Calefones: ['No calienta agua','Pierde agua','Falla eléctrica','Error instalación','Golpe transporte'],
+  Calderas: ['No enciende','Falla electrónica','Error instalación','Golpe transporte'],
+  Accesorios: ['Medida incorrecta','Golpe transporte','Producto equivocado'],
 }
 
 const provincias = [
-  'Buenos Aires',
-  'CABA',
-  'Catamarca',
-  'Chaco',
-  'Chubut',
-  'Córdoba',
-  'Corrientes',
-  'Entre Ríos',
-  'Formosa',
-  'Jujuy',
-  'La Pampa',
-  'La Rioja',
-  'Mendoza',
-  'Misiones',
-  'Neuquén',
-  'Río Negro',
-  'Salta',
-  'San Juan',
-  'San Luis',
-  'Santa Cruz',
-  'Santa Fe',
-  'Santiago del Estero',
-  'Tierra del Fuego',
-  'Tucumán',
+  'Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes',
+  'Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones',
+  'Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe',
+  'Santiago del Estero','Tierra del Fuego','Tucumán',
 ]
 
-const canales = [
-  'Mercado Libre',
-  'Tienda Online',
-  'WhatsApp',
-  'Distribuidor',
-  'Local',
-  'Otro',
-]
+const canales = ['Mercado Libre','Tienda Online','WhatsApp','Distribuidor','Local','Otro']
 
 const emptyForm = {
   fechaIngreso: new Date().toISOString().slice(0, 10),
-  nombreApellido: '',
-  direccion: '',
-  localidad: '',
-  provincia: '',
-  codigoPostal: '',
-  telefono: '',
-  fechaCompra: '',
-  canal: '',
-  vendedor: '',
-  ventaManual: '',
-  producto: '',
-  modelo: '',
-  motivo: '',
-  descripcionFalla: '',
-  email: '',
+  nombreApellido: '', direccion: '', localidad: '', provincia: '',
+  codigoPostal: '', telefono: '', fechaCompra: '', canal: '',
+  vendedor: '', ventaManual: '', producto: '', modelo: '',
+  motivo: '', descripcionFalla: '', email: '',
 }
 
 function generarTrackingId() {
@@ -150,31 +104,108 @@ function generarTrackingId() {
 }
 
 function sanitizeFileName(name) {
-  return name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9._-]/g, '_')
+  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._-]/g, '_')
 }
 
 async function subirArchivo(file, trackingId, folder) {
   if (!file) return null
-
-  const maxBytes = 10 * 1024 * 1024
-  if (file.size > maxBytes) {
-    throw new Error('Cada archivo debe pesar menos de 10 MB.')
-  }
-
+  if (file.size > 10 * 1024 * 1024) throw new Error('Cada archivo debe pesar menos de 10 MB.')
   const safeName = sanitizeFileName(file.name)
   const path = `${folder}/${trackingId}/${Date.now()}_${safeName}`
-
-  const { error } = await supabase.storage
-    .from('devoluciones')
-    .upload(path, file, { upsert: false })
-
+  const { error } = await supabase.storage.from('devoluciones').upload(path, file, { upsert: false })
   if (error) throw error
-
   const { data } = supabase.storage.from('devoluciones').getPublicUrl(path)
   return data.publicUrl
+}
+
+// ── UI helpers ──
+function Label({ children }) {
+  return (
+    <label style={{ fontSize: 11, fontWeight: 600, color: T.text2, textTransform: 'uppercase', letterSpacing: '0.6px', display: 'block', marginBottom: 6 }}>
+      {children}
+    </label>
+  )
+}
+
+function Field({ label, children }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {label && <Label>{label}</Label>}
+      {children}
+    </div>
+  )
+}
+
+const inputStyle = {
+  background: T.surface2,
+  border: `1px solid ${T.border}`,
+  borderRadius: T.radius,
+  padding: '10px 14px',
+  color: T.text,
+  fontSize: 14,
+  outline: 'none',
+  width: '100%',
+  fontFamily: T.font,
+  transition: 'border .2s',
+}
+
+function Input({ label, span, ...props }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, ...(span ? { gridColumn: span } : {}) }}>
+      {label && <Label>{label}</Label>}
+      <input
+        style={inputStyle}
+        onFocus={e => e.target.style.borderColor = '#4a6cf7'}
+        onBlur={e => e.target.style.borderColor = T.border}
+        {...props}
+      />
+    </div>
+  )
+}
+
+function Select({ label, span, children, ...props }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, ...(span ? { gridColumn: span } : {}) }}>
+      {label && <Label>{label}</Label>}
+      <select style={{ ...inputStyle, cursor: 'pointer' }} {...props}>
+        {children}
+      </select>
+    </div>
+  )
+}
+
+function Textarea({ label, span, ...props }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, ...(span ? { gridColumn: span } : {}) }}>
+      {label && <Label>{label}</Label>}
+      <textarea
+        style={{ ...inputStyle, minHeight: 110, resize: 'vertical' }}
+        onFocus={e => e.target.style.borderColor = '#4a6cf7'}
+        onBlur={e => e.target.style.borderColor = T.border}
+        {...props}
+      />
+    </div>
+  )
+}
+
+function FileInput({ label, span, ...props }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, ...(span ? { gridColumn: span } : {}) }}>
+      {label && <Label>{label}</Label>}
+      <div style={{ background: T.surface2, border: `1px dashed ${T.border2}`, borderRadius: T.radius, padding: '10px 14px' }}>
+        <input type="file" style={{ color: T.text2, fontSize: 13, width: '100%', fontFamily: T.font }} {...props} />
+      </div>
+    </div>
+  )
+}
+
+function SectionTitle({ emoji, title }) {
+  return (
+    <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, paddingBottom: 10, borderBottom: `1px solid ${T.border}` }}>
+      <span style={{ fontSize: 18 }}>{emoji}</span>
+      <span style={{ fontWeight: 700, fontSize: 14, color: T.text, letterSpacing: '-0.2px' }}>{title}</span>
+    </div>
+  )
 }
 
 export default function PublicForm() {
@@ -190,11 +221,7 @@ export default function PublicForm() {
   const motivos = useMemo(() => motivosPorProducto[form.producto] || [], [form.producto])
 
   const update = (key, value) => {
-    setForm((prev) => ({
-      ...prev,
-      [key]: value,
-      ...(key === 'producto' ? { modelo: '', motivo: '' } : {}),
-    }))
+    setForm(prev => ({ ...prev, [key]: value, ...(key === 'producto' ? { modelo: '', motivo: '' } : {}) }))
   }
 
   const validar = () => {
@@ -213,442 +240,213 @@ export default function PublicForm() {
     return ''
   }
 
- async function guardar(e) {
-  e.preventDefault()
-  setMensaje('')
-  setErrorMsg('')
-
-  const validacion = validar()
-  if (validacion) {
-    setErrorMsg(validacion)
-    return
-  }
-
-  setGuardando(true)
-
-  try {
-    const id = generarTrackingId()
-    console.log('STEP 1 - ID generado:', id)
-
-    let comprobanteUrl = null
-    let imagenProductoUrl = null
-
-    if (comprobante) {
-      console.log('STEP 2 - Subiendo comprobante...')
-      try {
-        comprobanteUrl = await subirArchivo(comprobante, id, 'comprobantes')
-        console.log('STEP 2 OK - comprobanteUrl:', comprobanteUrl)
-      } catch (err) {
-        console.error('STEP 2 ERROR:', err)
-        alert('ERROR SUBIENDO COMPROBANTE:\n' + JSON.stringify(err, null, 2))
-        throw err
+  async function guardar(e) {
+    e.preventDefault()
+    setMensaje('')
+    setErrorMsg('')
+    const validacion = validar()
+    if (validacion) { setErrorMsg(validacion); return }
+    setGuardando(true)
+    try {
+      const id = generarTrackingId()
+      let comprobanteUrl = null
+      let imagenProductoUrl = null
+      if (comprobante) {
+        try { comprobanteUrl = await subirArchivo(comprobante, id, 'comprobantes') }
+        catch (err) { alert('ERROR SUBIENDO COMPROBANTE:\n' + JSON.stringify(err, null, 2)); throw err }
       }
-    }
-
-    if (imagenProducto) {
-      console.log('STEP 3 - Subiendo imagen producto...')
-      try {
-        imagenProductoUrl = await subirArchivo(imagenProducto, id, 'productos')
-        console.log('STEP 3 OK - imagenProductoUrl:', imagenProductoUrl)
-      } catch (err) {
-        console.error('STEP 3 ERROR:', err)
-        alert('ERROR SUBIENDO IMAGEN:\n' + JSON.stringify(err, null, 2))
-        throw err
+      if (imagenProducto) {
+        try { imagenProductoUrl = await subirArchivo(imagenProducto, id, 'productos') }
+        catch (err) { alert('ERROR SUBIENDO IMAGEN:\n' + JSON.stringify(err, null, 2)); throw err }
       }
-    }
-
-    let diasGarantia = null
-    if (form.fechaCompra && form.fechaIngreso) {
-      const fechaCompra = new Date(form.fechaCompra)
-      const fechaReclamo = new Date(form.fechaIngreso)
-
-      if (!isNaN(fechaCompra.getTime()) && !isNaN(fechaReclamo.getTime())) {
-        diasGarantia = Math.floor(
-          (fechaReclamo - fechaCompra) / (1000 * 60 * 60 * 24)
-        )
+      let diasGarantia = null
+      if (form.fechaCompra && form.fechaIngreso) {
+        const fechaCompra = new Date(form.fechaCompra)
+        const fechaReclamo = new Date(form.fechaIngreso)
+        if (!isNaN(fechaCompra.getTime()) && !isNaN(fechaReclamo.getTime())) {
+          diasGarantia = Math.floor((fechaReclamo - fechaCompra) / (1000 * 60 * 60 * 24))
+        }
       }
-    }
-
-    const payload = {
-      tracking_id: id,
-      fecha_ingreso: new Date().toISOString().slice(0, 10),
-      nombre_apellido: form.nombreApellido.trim(),
-      direccion: form.direccion.trim(),
-      localidad: form.localidad.trim(),
-      provincia: form.provincia,
-      codigo_postal: form.codigoPostal.trim(),
-      telefono: form.telefono.trim(),
-      fecha_compra: form.fechaCompra || null,
-      dias_garantia: diasGarantia,
-      canal: form.canal || null,
-      vendedor: form.vendedor.trim() || null,
-      numero_venta_manual: form.ventaManual.trim() || null,
-      comprobante_url: comprobanteUrl,
-      producto: form.producto,
-      modelo: form.modelo,
-      motivo: form.motivo,
-      descripcion_falla: form.descripcionFalla.trim(),
-      imagen_producto_url: imagenProductoUrl,
-      email: form.email.trim(),
-      estado: 'Ingresado',
-    }
-
-    console.log('STEP 4 - INSERTANDO:', payload)
-
-    const { data, error } = await supabase
-      .from('devoluciones')
-      .insert([payload])
-      .select()
-
-    if (error) {
-      console.error('STEP 4 ERROR:', error)
-      alert('ERROR INSERT TABLA:\n' + JSON.stringify(error, null, 2))
-      throw error
-    }
-
-    console.log('STEP 4 OK:', data)
-
-    const { data: emailData, error: emailError } = await supabase.functions.invoke(
-      'alta-reclamo-email',
-      {
+      const payload = {
+        tracking_id: id,
+        fecha_ingreso: new Date().toISOString().slice(0, 10),
+        nombre_apellido: form.nombreApellido.trim(),
+        direccion: form.direccion.trim(),
+        localidad: form.localidad.trim(),
+        provincia: form.provincia,
+        codigo_postal: form.codigoPostal.trim(),
+        telefono: form.telefono.trim(),
+        fecha_compra: form.fechaCompra || null,
+        dias_garantia: diasGarantia,
+        canal: form.canal || null,
+        vendedor: form.vendedor.trim() || null,
+        numero_venta_manual: form.ventaManual.trim() || null,
+        comprobante_url: comprobanteUrl,
+        producto: form.producto,
+        modelo: form.modelo,
+        motivo: form.motivo,
+        descripcion_falla: form.descripcionFalla.trim(),
+        imagen_producto_url: imagenProductoUrl,
+        email: form.email.trim(),
+        estado: 'Ingresado',
+      }
+      const { data, error } = await supabase.from('devoluciones').insert([payload]).select()
+      if (error) { alert('ERROR INSERT TABLA:\n' + JSON.stringify(error, null, 2)); throw error }
+      await supabase.functions.invoke('alta-reclamo-email', {
         body: {
-          email: form.email.trim(),
-          nombre: form.nombreApellido.trim(),
-          trackingId: id,
-          fechaIngreso: form.fechaIngreso,
-          direccion: form.direccion.trim(),
-          localidad: form.localidad.trim(),
-          provincia: form.provincia,
-          codigoPostal: form.codigoPostal.trim(),
-          telefono: form.telefono.trim(),
-          fechaCompra: form.fechaCompra || null,
-          canal: form.canal || null,
-          vendedor: form.vendedor.trim() || null,
-          ventaManual: form.ventaManual.trim() || null,
-          producto: form.producto,
-          modelo: form.modelo,
-          motivo: form.motivo,
-          descripcion: form.descripcionFalla.trim(),
-          diasGarantia: diasGarantia,
-          comprobanteUrl: comprobanteUrl,
-          imagenProductoUrl: imagenProductoUrl,
+          email: form.email.trim(), nombre: form.nombreApellido.trim(), trackingId: id,
+          fechaIngreso: form.fechaIngreso, direccion: form.direccion.trim(),
+          localidad: form.localidad.trim(), provincia: form.provincia,
+          codigoPostal: form.codigoPostal.trim(), telefono: form.telefono.trim(),
+          fechaCompra: form.fechaCompra || null, canal: form.canal || null,
+          vendedor: form.vendedor.trim() || null, ventaManual: form.ventaManual.trim() || null,
+          producto: form.producto, modelo: form.modelo, motivo: form.motivo,
+          descripcion: form.descripcionFalla.trim(), diasGarantia,
+          comprobanteUrl, imagenProductoUrl,
         },
-      }
-    )
-
-    console.log('STEP 5 emailData:', emailData)
-    console.log('STEP 5 emailError:', emailError)
-
-    setTrackingId(id)
-    setMensaje(`Solicitud registrada correctamente. Tu ID es ${id}`)
-
-    setForm({
-      ...emptyForm,
-      fechaIngreso: new Date().toISOString().slice(0, 10),
-    })
-
-    setComprobante(null)
-    setImagenProducto(null)
-
-  } catch (err) {
-    console.error('ERROR FINAL:', err)
-    setErrorMsg(err?.message || 'No se pudo registrar la solicitud.')
-  } finally {
-    setGuardando(false)
+      })
+      setTrackingId(id)
+      setMensaje(`Solicitud registrada correctamente. Tu ID de seguimiento es ${id}`)
+      setForm({ ...emptyForm, fechaIngreso: new Date().toISOString().slice(0, 10) })
+      setComprobante(null)
+      setImagenProducto(null)
+    } catch (err) {
+      setErrorMsg(err?.message || 'No se pudo registrar la solicitud.')
+    } finally {
+      setGuardando(false)
+    }
   }
-}
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f4f6f8', padding: 24, fontFamily: 'Arial, sans-serif' }}>
-      <div
-        style={{
-          maxWidth: 980,
-          margin: '0 auto',
-          background: '#fff',
-          borderRadius: 16,
-          padding: 28,
-          boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
-        }}
-      >
-        <h1 style={{ margin: 0, fontSize: 30 }}>Portal de Soporte TEMPTECH</h1>
-        <p style={{ marginTop: 8, color: '#6b7280' }}>
-          Carga inicial de reclamos con adjuntos, ID automático y registro en base de datos.
-        </p>
+    <div style={{ minHeight: '100vh', background: T.bg, padding: '32px 16px', fontFamily: T.font }}>
+      {/* Inject Google Font */}
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
 
-        {errorMsg ? (
-          <div
-            style={{
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
-              color: '#991b1b',
-              padding: 14,
-              borderRadius: 12,
-              marginBottom: 18,
-            }}
-          >
-            {errorMsg}
+      <div style={{ maxWidth: 860, margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <img src={LOGO_URL} alt="TEMPTECH" style={{ height: 42, objectFit: 'contain', marginBottom: 16 }} onError={e => e.currentTarget.style.display = 'none'} />
+          <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 28, fontWeight: 800, color: T.text, margin: 0, letterSpacing: '-0.5px' }}>
+            Portal de Soporte
+          </h1>
+          <p style={{ color: T.text2, marginTop: 8, fontSize: 14 }}>
+            Registrá tu solicitud de garantía o devolución
+          </p>
+        </div>
+
+        {/* Mensaje éxito */}
+        {mensaje && (
+          <div style={{ background: T.greenDim, border: `1px solid rgba(61,214,140,0.3)`, color: T.green, padding: '16px 20px', borderRadius: T.radiusLg, marginBottom: 24, fontSize: 14, lineHeight: 1.6 }}>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>✓ Solicitud registrada</div>
+            <div>{mensaje}</div>
+            {trackingId && (
+              <div style={{ marginTop: 10, background: 'rgba(61,214,140,0.1)', borderRadius: 8, padding: '8px 12px', fontFamily: 'monospace', fontSize: 15, fontWeight: 700 }}>
+                ID: {trackingId}
+              </div>
+            )}
           </div>
-        ) : null}
+        )}
 
-        {mensaje ? (
-          <div
-            style={{
-              background: '#ecfdf5',
-              border: '1px solid #a7f3d0',
-              color: '#065f46',
-              padding: 14,
-              borderRadius: 12,
-              marginBottom: 18,
-            }}
-          >
-            {mensaje}
+        {/* Mensaje error */}
+        {errorMsg && (
+          <div style={{ background: T.redDim, border: `1px solid rgba(255,77,109,0.3)`, color: T.red, padding: '14px 20px', borderRadius: T.radiusLg, marginBottom: 24, fontSize: 14 }}>
+            ⚠ {errorMsg}
           </div>
-        ) : null}
+        )}
 
-        <form
-          onSubmit={guardar}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-            gap: 16,
-          }}
-        >
- <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-  <label style={{ fontWeight: 500 }}>Fecha ingreso</label>
-  <input
-    type="text"
-    value={form.fechaIngreso.split('-').reverse().join('/')}
-    readOnly
-    style={{
-      padding: '12px 14px',
-      borderRadius: 10,
-      border: '1px solid #d1d5db',
-      backgroundColor: '#f3f4f6',
-      color: '#374151',
-      width: '220px',
-    }}
-  />
-</div>
+        {/* Card form */}
+        <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: T.radiusLg, overflow: 'hidden' }}>
+          {/* Línea degradado arriba */}
+          <div style={{ height: 3, background: T.grad }} />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Nombre y Apellido</label>
-            <input
-              type="text"
-              value={form.nombreApellido}
-              onChange={(e) => update('nombreApellido', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            />
-          </div>
+          <form onSubmit={guardar} style={{ padding: 28 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 18 }}>
 
-          <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Dirección</label>
-            <input
-              type="text"
-              value={form.direccion}
-              onChange={(e) => update('direccion', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            />
-          </div>
+              {/* Datos personales */}
+              <SectionTitle emoji="👤" title="Datos personales" />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Localidad</label>
-            <input
-              type="text"
-              value={form.localidad}
-              onChange={(e) => update('localidad', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            />
-          </div>
+              <Input label="Nombre y Apellido *" value={form.nombreApellido} onChange={e => update('nombreApellido', e.target.value)} placeholder="Juan Pérez" />
+              <Input label="Email *" type="email" value={form.email} onChange={e => update('email', e.target.value)} placeholder="tu@email.com" />
+              <Input span="1 / -1" label="Dirección *" value={form.direccion} onChange={e => update('direccion', e.target.value)} placeholder="Av. Corrientes 1234" />
+              <Input label="Localidad *" value={form.localidad} onChange={e => update('localidad', e.target.value)} placeholder="Buenos Aires" />
+              <Select label="Provincia *" value={form.provincia} onChange={e => update('provincia', e.target.value)}>
+                <option value="">Seleccionar provincia</option>
+                {provincias.map(p => <option key={p} value={p}>{p}</option>)}
+              </Select>
+              <Input label="Código Postal *" value={form.codigoPostal} onChange={e => update('codigoPostal', e.target.value)} placeholder="1000" />
+              <Input label="Teléfono *" value={form.telefono} onChange={e => update('telefono', e.target.value)} placeholder="+54 11 1234-5678" />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Provincia</label>
-            <select
-              value={form.provincia}
-              onChange={(e) => update('provincia', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            >
-              <option value="">Seleccionar provincia</option>
-              {provincias.map((prov) => (
-                <option key={prov} value={prov}>
-                  {prov}
-                </option>
-              ))}
-            </select>
-          </div>
+              {/* Datos de compra */}
+              <SectionTitle emoji="🛒" title="Datos de compra" />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Código Postal</label>
-            <input
-              type="text"
-              value={form.codigoPostal}
-              onChange={(e) => update('codigoPostal', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            />
-          </div>
+              <Input label="Fecha de Compra" type="date" value={form.fechaCompra} onChange={e => update('fechaCompra', e.target.value)} />
+              <Select label="Canal de compra" value={form.canal} onChange={e => update('canal', e.target.value)}>
+                <option value="">Seleccionar canal</option>
+                {canales.map(c => <option key={c} value={c}>{c}</option>)}
+              </Select>
+              <Input label="Vendedor" value={form.vendedor} onChange={e => update('vendedor', e.target.value)} placeholder="Nombre del vendedor" />
+              <Input span="1 / -1" label="# Venta o Comprobante" placeholder="Podés escribir el número manualmente" value={form.ventaManual} onChange={e => update('ventaManual', e.target.value)} />
+              <FileInput span="1 / -1" label="Adjuntar comprobante (imagen o PDF)" accept="image/*,.pdf" onChange={e => setComprobante(e.target.files?.[0] || null)} />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Teléfono</label>
-            <input
-              type="text"
-              value={form.telefono}
-              onChange={(e) => update('telefono', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            />
-          </div>
+              {/* Datos del producto */}
+              <SectionTitle emoji="📦" title="Datos del producto" />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Email</label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => update('email', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            />
-          </div>
+              <Select label="Producto *" value={form.producto} onChange={e => update('producto', e.target.value)}>
+                <option value="">Seleccionar producto</option>
+                {productos.map(p => <option key={p} value={p}>{p}</option>)}
+              </Select>
+              <Select label="Modelo *" value={form.modelo} onChange={e => update('modelo', e.target.value)} disabled={!form.producto}>
+                <option value="">{form.producto ? 'Seleccionar modelo' : 'Elegí primero el producto'}</option>
+                {modelos.map(m => <option key={m} value={m}>{m}</option>)}
+              </Select>
+              <Select span="1 / -1" label="Motivo *" value={form.motivo} onChange={e => update('motivo', e.target.value)} disabled={!form.producto}>
+                <option value="">{form.producto ? 'Seleccionar motivo' : 'Elegí primero el producto'}</option>
+                {motivos.map(m => <option key={m} value={m}>{m}</option>)}
+              </Select>
+              <Textarea span="1 / -1" label="Descripción de la falla *" value={form.descripcionFalla} onChange={e => update('descripcionFalla', e.target.value)} placeholder="Describí el problema con el mayor detalle posible..." />
+              <FileInput span="1 / -1" label="Adjuntar imagen del producto" accept="image/*,.pdf" onChange={e => setImagenProducto(e.target.files?.[0] || null)} />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Fecha de Compra</label>
-            <input
-              type="date"
-              value={form.fechaCompra}
-              onChange={(e) => update('fechaCompra', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            />
-          </div>
+              {/* Fecha de ingreso (readonly) */}
+              <div style={{ gridColumn: '1 / -1', borderTop: `1px solid ${T.border}`, paddingTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                <div style={{ fontSize: 13, color: T.text3 }}>
+                  Fecha de ingreso: <span style={{ color: T.text2, fontWeight: 500 }}>{form.fechaIngreso.split('-').reverse().join('/')}</span>
+                </div>
+                <button
+                  type="submit"
+                  disabled={guardando}
+                  style={{
+                    background: guardando ? T.surface2 : T.grad,
+                    border: 'none', borderRadius: T.radius,
+                    padding: '12px 32px', color: '#fff',
+                    fontSize: 14, fontWeight: 600,
+                    cursor: guardando ? 'not-allowed' : 'pointer',
+                    opacity: guardando ? 0.7 : 1,
+                    fontFamily: T.font,
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    transition: 'opacity .2s',
+                  }}
+                >
+                  {guardando && (
+                    <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                  )}
+                  {guardando ? 'Registrando...' : 'Registrar solicitud'}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Canal</label>
-            <select
-              value={form.canal}
-              onChange={(e) => update('canal', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            >
-              <option value="">Seleccionar canal</option>
-              {canales.map((canal) => (
-                <option key={canal} value={canal}>
-                  {canal}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Vendedor</label>
-            <input
-              type="text"
-              value={form.vendedor}
-              onChange={(e) => update('vendedor', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            />
-          </div>
-
-          <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label># Venta o Comprobante</label>
-            <input
-              type="text"
-              placeholder="Podés escribir el número manualmente"
-              value={form.ventaManual}
-              onChange={(e) => update('ventaManual', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            />
-            <input
-              type="file"
-              accept="image/*,.pdf"
-              onChange={(e) => setComprobante(e.target.files?.[0] || null)}
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Producto</label>
-            <select
-              value={form.producto}
-              onChange={(e) => update('producto', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            >
-              <option value="">Seleccionar producto</option>
-              {productos.map((producto) => (
-                <option key={producto} value={producto}>
-                  {producto}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Modelo</label>
-            <select
-              value={form.modelo}
-              onChange={(e) => update('modelo', e.target.value)}
-              disabled={!form.producto}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            >
-              <option value="">
-                {form.producto ? 'Seleccionar modelo' : 'Elegí primero el producto'}
-              </option>
-              {modelos.map((modelo) => (
-                <option key={modelo} value={modelo}>
-                  {modelo}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Motivo</label>
-            <select
-              value={form.motivo}
-              onChange={(e) => update('motivo', e.target.value)}
-              disabled={!form.producto}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db' }}
-            >
-              <option value="">
-                {form.producto ? 'Seleccionar motivo' : 'Elegí primero el producto'}
-              </option>
-              {motivos.map((motivo) => (
-                <option key={motivo} value={motivo}>
-                  {motivo}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Descripción de Falla</label>
-            <textarea
-              value={form.descripcionFalla}
-              onChange={(e) => update('descripcionFalla', e.target.value)}
-              style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #d1d5db', minHeight: 120 }}
-            />
-          </div>
-
-          <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label>Adjuntar Imagen Producto</label>
-            <input
-              type="file"
-              accept="image/*,.pdf"
-              onChange={(e) => setImagenProducto(e.target.files?.[0] || null)}
-            />
-          </div>
-
-          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-            <button
-              type="submit"
-              disabled={guardando}
-              style={{
-                background: '#111827',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 12,
-                padding: '13px 22px',
-                cursor: guardando ? 'not-allowed' : 'pointer',
-                opacity: guardando ? 0.7 : 1,
-              }}
-            >
-              {guardando ? 'Registrando...' : 'Registrar solicitud'}
-            </button>
-          </div>
-        </form>
+        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11, color: T.text3 }}>
+          © {new Date().getFullYear()} TEMPTECH · Soporte al Cliente
+        </div>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        * { box-sizing: border-box; }
+        input::placeholder, textarea::placeholder { color: ${T.text3}; }
+        select option { background: ${T.surface2}; color: ${T.text}; }
+      `}</style>
     </div>
   )
 }
