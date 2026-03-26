@@ -6,34 +6,24 @@ import { supabase } from '../lib/supabase'
 const LOGO_URL = 'https://edddvxqlvwgexictsnmn.supabase.co/storage/v1/object/public/Imagenes/Imagen-Corporativa/Temptech_LogoHorizontal.png'
 
 const T = {
-  bg:        '#08090f',
-  surface:   '#111111',
-  surface2:  '#181818',
-  surface3:  '#202020',
-  border:    '#2a2a2a',
-  border2:   '#333333',
-  grad:      'linear-gradient(135deg,#e8215a,#8b2fc9,#4a6cf7)',
-  text:      '#eceef5',
-  text2:     '#8890aa',
-  text3:     '#4a5068',
-  green:     '#3dd68c',
-  greenDim:  'rgba(61,214,140,0.12)',
-  red:       '#ff4d6d',
-  redDim:    'rgba(255,77,109,0.12)',
-  yellow:    '#ffd166',
-  yellowDim: 'rgba(255,209,102,0.12)',
-  blue:      '#4a9eff',
-  blueDim:   'rgba(74,158,255,0.12)',
-  purple:    '#a78bfa',
-  font:      "'Inter', -apple-system, sans-serif",
-  radius:    '10px',
-  radiusLg:  '16px',
+  bg: '#08090f', surface: '#111111', surface2: '#181818', surface3: '#202020',
+  border: '#2a2a2a', border2: '#333333',
+  grad: 'linear-gradient(135deg,#e8215a,#8b2fc9,#4a6cf7)',
+  text: '#eceef5', text2: '#8890aa', text3: '#4a5068',
+  green: '#3dd68c', greenDim: 'rgba(61,214,140,0.12)',
+  red: '#ff4d6d', redDim: 'rgba(255,77,109,0.12)',
+  yellow: '#ffd166', yellowDim: 'rgba(255,209,102,0.12)',
+  blue: '#4a9eff', blueDim: 'rgba(74,158,255,0.12)',
+  purple: '#a78bfa', orange: '#fb923c',
+  font: "'Inter', -apple-system, sans-serif",
+  radius: '10px', radiusLg: '16px',
 }
 
 const STATUS_CONFIG = {
   'Ingresado':  { color: T.blue,   bg: T.blueDim,   label: 'Ingresado' },
   'pendiente':  { color: T.yellow, bg: T.yellowDim,  label: 'Pendiente' },
   'Resolucion': { color: T.purple, bg: 'rgba(167,139,250,0.12)', label: 'Resolución' },
+  'Devolucion': { color: T.orange, bg: 'rgba(251,146,60,0.12)', label: 'Devolución' },
   'rechazado':  { color: T.red,    bg: T.redDim,    label: 'Rechazado' },
   'cerrado':    { color: T.text3,  bg: T.surface2,  label: 'Cerrado' },
 }
@@ -42,39 +32,24 @@ function Badge({ estado, aprobado }) {
   const cfg = STATUS_CONFIG[estado] || STATUS_CONFIG['Ingresado']
   return (
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-      <span style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}40`, fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20 }}>
-        {cfg.label}
-      </span>
-      {aprobado === 'SI' && (
-        <span style={{ background: T.greenDim, color: T.green, border: `1px solid ${T.green}40`, fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20 }}>
-          ✓ Aprobado
-        </span>
-      )}
+      <span style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}40`, fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20 }}>{cfg.label}</span>
+      {aprobado === 'SI' && <span style={{ background: T.greenDim, color: T.green, border: `1px solid ${T.green}40`, fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20 }}>✓ Aprobado</span>}
     </div>
   )
 }
 
 function Btn({ children, onClick, disabled, variant = 'ghost', size = 'sm' }) {
   const variants = {
-    ghost:   { bg: T.surface3, color: T.text2, border: `1px solid ${T.border2}` },
-    primary: { bg: T.grad,     color: '#fff',  border: 'none' },
-    success: { bg: T.greenDim, color: T.green, border: `1px solid ${T.green}40` },
-    danger:  { bg: T.redDim,   color: T.red,   border: `1px solid ${T.red}40` },
-    warn:    { bg: T.yellowDim,color: T.yellow, border: `1px solid ${T.yellow}40` },
+    ghost:    { bg: T.surface3, color: T.text2,   border: `1px solid ${T.border2}` },
+    primary:  { bg: T.grad,     color: '#fff',     border: 'none' },
+    success:  { bg: T.greenDim, color: T.green,    border: `1px solid ${T.green}40` },
+    danger:   { bg: T.redDim,   color: T.red,      border: `1px solid ${T.red}40` },
+    warn:     { bg: T.yellowDim,color: T.yellow,   border: `1px solid ${T.yellow}40` },
+    orange:   { bg: 'rgba(251,146,60,0.12)', color: T.orange, border: `1px solid rgba(251,146,60,0.35)` },
   }
-  const v = variants[variant]
-  const pad = size === 'sm' ? '6px 12px' : '9px 20px'
+  const v = variants[variant] || variants.ghost
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        background: v.bg, color: v.color, border: v.border,
-        borderRadius: T.radius, padding: pad, fontSize: 12, fontWeight: 600,
-        cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
-        fontFamily: T.font, transition: 'opacity .15s', whiteSpace: 'nowrap',
-      }}
-    >
+    <button onClick={onClick} disabled={disabled} style={{ background: v.bg, color: v.color, border: v.border, borderRadius: T.radius, padding: size === 'sm' ? '6px 12px' : '9px 20px', fontSize: 12, fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1, fontFamily: T.font, transition: 'opacity .15s', whiteSpace: 'nowrap' }}>
       {children}
     </button>
   )
@@ -97,6 +72,99 @@ function formatearFecha(fecha) {
   return d.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
+// ── Panel genérico para Resolución y Devolución ──
+function PanelEnvio({ item, tipo, onClose, onGuardar, obtenerLinkSeguimiento }) {
+  const isDevolucion = tipo === 'Devolucion'
+
+  const defaultTexto = isDevolucion
+    ? `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nTe adjuntamos la etiqueta para que nos realices la devolución de la unidad defectuosa en garantía.\n\nEmpresa: [empresa]\n[datos adicionales]`
+    : `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados. A continuación le dejamos los datos para el seguimiento de su envío.\n\nEmpresa: [empresa]\n[datos adicionales]`
+
+  const [empresa, setEmpresa]     = useState(isDevolucion ? item.empresa_envio || 'Correo Argentino' : item.empresa_envio || 'Correo Argentino')
+  const [codigo, setCodigo]       = useState(item.codigo_seguimiento || '')
+  const [fechaEnvio, setFechaEnvio] = useState(item.fecha_envio || '')
+  const [textoEmail, setTextoEmail] = useState(defaultTexto)
+  const [textoDirty, setTextoDirty] = useState(false)
+
+  // Actualizar texto automáticamente al cambiar empresa/código/fecha, salvo que el admin lo haya editado manualmente
+  useEffect(() => {
+    if (textoDirty) return
+    const datos = empresa !== 'Logistica Propia'
+      ? `Empresa: ${empresa}\nCódigo de seguimiento: ${codigo || '[completar]'}\nLink: ${obtenerLinkSeguimiento(empresa)}`
+      : `Empresa: Logística Propia\nFecha de envío: ${fechaEnvio || '[seleccionar]'}`
+
+    const base = isDevolucion
+      ? `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nTe adjuntamos la etiqueta para que nos realices la devolución de la unidad defectuosa en garantía.\n\n${datos}`
+      : `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados. A continuación le dejamos los datos para el seguimiento de su envío.\n\n${datos}`
+    setTextoEmail(base)
+  }, [empresa, codigo, fechaEnvio, textoDirty])
+
+  const color = isDevolucion ? T.orange : T.purple
+  const colorBg = isDevolucion ? 'rgba(251,146,60,0.08)' : 'rgba(167,139,250,0.08)'
+  const colorBorder = isDevolucion ? 'rgba(251,146,60,0.3)' : 'rgba(167,139,250,0.3)'
+
+  return (
+    <div style={{ margin: '0 22px 18px', padding: 18, background: colorBg, border: `1px solid ${colorBorder}`, borderRadius: T.radius }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color, marginBottom: 16 }}>
+        {isDevolucion ? '📦 Datos de devolución' : '🚚 Datos de resolución'}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+        <div>
+          <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Empresa</label>
+          <select value={empresa} onChange={e => setEmpresa(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%' }}>
+            <option value="Correo Argentino">Correo Argentino</option>
+            <option value="Andreani">Andreani</option>
+            <option value="Logistica Propia">Logística Propia</option>
+          </select>
+        </div>
+        {empresa !== 'Logistica Propia' ? (
+          <div>
+            <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Código de seguimiento</label>
+            <input type="text" value={codigo} onChange={e => setCodigo(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%', outline: 'none' }} placeholder="Código de seguimiento" />
+          </div>
+        ) : (
+          <div>
+            <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Fecha de envío</label>
+            <input type="date" value={fechaEnvio} onChange={e => setFechaEnvio(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%', outline: 'none' }} />
+          </div>
+        )}
+      </div>
+
+      {empresa !== 'Logistica Propia' && (
+        <div style={{ marginBottom: 12, fontSize: 12, color: T.text3 }}>
+          <a href={obtenerLinkSeguimiento(empresa)} target="_blank" rel="noreferrer" style={{ color: '#7b9fff' }}>🔗 Abrir link de seguimiento</a>
+        </div>
+      )}
+
+      {/* Texto editable del email */}
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+          <label style={{ fontSize: 11, color: T.text3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Texto del email (editable)</label>
+          {textoDirty && (
+            <button type="button" onClick={() => setTextoDirty(false)} style={{ background: 'none', border: 'none', color: '#7b9fff', fontSize: 11, cursor: 'pointer', textDecoration: 'underline', fontFamily: T.font }}>
+              Resetear texto
+            </button>
+          )}
+        </div>
+        <textarea
+          value={textoEmail}
+          onChange={e => { setTextoEmail(e.target.value); setTextoDirty(true) }}
+          rows={8}
+          style={{ width: '100%', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '10px 12px', color: T.text2, fontSize: 12, fontFamily: T.font, resize: 'vertical', outline: 'none', lineHeight: 1.7 }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Btn variant={isDevolucion ? 'orange' : 'primary'} onClick={() => onGuardar({ empresa, codigo, fechaEnvio, textoEmail, tipo })}>
+          Guardar y enviar email
+        </Btn>
+        <Btn onClick={onClose}>Cancelar</Btn>
+      </div>
+    </div>
+  )
+}
+
 export default function AdminList() {
   const [busquedaTracking, setBusquedaTracking] = useState('')
   const [datos, setDatos] = useState([])
@@ -105,21 +173,16 @@ export default function AdminList() {
   const [errorTexto, setErrorTexto] = useState('')
   const [rechazoAbiertoId, setRechazoAbiertoId] = useState(null)
   const [textoRechazo, setTextoRechazo] = useState('')
-  const [resolucionAbiertaId, setResolucionAbiertaId] = useState(null)
-  const [empresaEnvio, setEmpresaEnvio] = useState('Correo Argentino')
-  const [codigoSeguimiento, setCodigoSeguimiento] = useState('')
-  const [fechaEnvio, setFechaEnvio] = useState('')
+  // Panel de envío unificado (resolución + devolución)
+  const [panelAbierto, setPanelAbierto] = useState(null) // { id, tipo }
   const navigate = useNavigate()
 
-  const datosFiltrados = datos.filter(item =>
-    !busquedaTracking || item.tracking_id?.toLowerCase().includes(busquedaTracking.toLowerCase())
-  )
+  const datosFiltrados = datos.filter(item => !busquedaTracking || item.tracking_id?.toLowerCase().includes(busquedaTracking.toLowerCase()))
 
   function armarLineaNota(tipo, texto) {
     const fecha = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
     return `${fecha} - ${tipo}: ${texto || ''}`.trim()
   }
-
   function unirNotas(notasActuales, nuevaLinea) {
     if (!notasActuales || !notasActuales.trim()) return nuevaLinea
     return `${notasActuales}\n${nuevaLinea}`
@@ -137,9 +200,7 @@ export default function AdminList() {
   }
 
   useEffect(() => { cargar() }, [filtroEstado])
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => { if (!data.session) navigate('/login') })
-  }, [])
+  useEffect(() => { supabase.auth.getSession().then(({ data }) => { if (!data.session) navigate('/login') }) }, [])
 
   const cerrarSesion = async () => {
     const { error } = await supabase.auth.signOut()
@@ -160,14 +221,13 @@ export default function AdminList() {
     const texto = window.prompt('Nota para APROBADO:', '')
     if (texto === null) return
     const nuevaNota = armarLineaNota('APROBADO', texto)
-    const payload = { aprobado: 'SI', estado: 'pendiente', fecha_aprobado: new Date().toISOString(), fecha_desaprobado: null, motivo_rechazo: null, notas: unirNotas(item.notas, nuevaNota) }
-    const { error } = await supabase.from('devoluciones').update(payload).eq('id', item.id)
+    const { error } = await supabase.from('devoluciones').update({ aprobado: 'SI', estado: 'pendiente', fecha_aprobado: new Date().toISOString(), fecha_desaprobado: null, motivo_rechazo: null, notas: unirNotas(item.notas, nuevaNota) }).eq('id', item.id)
     if (error) { alert('No se pudo actualizar el aprobado'); return }
     try {
       const resp = await fetch('/api/enviar-aprobado', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: (item.email || '').trim(), nombre: item.nombre_apellido || item.nombre || '', apellido: '', tracking_id: item.tracking_id || '' }) })
       const data = await resp.json().catch(() => ({}))
       if (!resp.ok) alert(`Error mail aprobado: ${data.detalle || data.error || 'Sin detalle'}`)
-    } catch (err) { alert('Se aprobó, pero falló el envío del mail') }
+    } catch { alert('Se aprobó, pero falló el envío del mail') }
     await cargar()
   }
 
@@ -175,9 +235,7 @@ export default function AdminList() {
     if (item.estado === 'cerrado' || !item?.id) return
     const { error } = await supabase.from('devoluciones').update({ estado: 'Ingresado', aprobado: 'NO', fecha_aprobado: null, fecha_desaprobado: new Date().toISOString(), motivo_rechazo: null }).eq('id', item.id)
     if (error) { alert('Error al desaprobar'); return }
-    const response = await fetch('/api/enviar-desaprobado', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: item.email, nombre: item.nombre_apellido, tracking_id: item.tracking_id, motivo: textoRechazo }) })
-    const data = await response.json().catch(() => ({}))
-    if (!response.ok) alert('Se desaprobó, pero falló el email')
+    await fetch('/api/enviar-desaprobado', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: item.email, nombre: item.nombre_apellido, tracking_id: item.tracking_id, motivo: textoRechazo }) })
     await cargar()
   }
 
@@ -192,17 +250,10 @@ export default function AdminList() {
       const resp = await fetch('/api/enviar-rechazo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: (item.email || '').trim(), nombre: item.nombre_apellido || item.nombre || '', apellido: '', tracking_id: item.tracking_id || '', motivo, producto: item.producto || '', modelo: item.modelo || '' }) })
       const data = await resp.json().catch(() => ({}))
       if (!resp.ok) alert(`Error mail rechazo: ${data.detalle || data.error || 'Sin detalle'}`)
-    } catch (err) { alert('Se rechazó, pero falló el envío del mail') }
+    } catch { alert('Se rechazó, pero falló el envío del mail') }
     setRechazoAbiertoId(null)
     setTextoRechazo('')
     await cargar()
-  }
-
-  function abrirResolucion(item) {
-    setResolucionAbiertaId(item.id)
-    setEmpresaEnvio(item.empresa_envio || 'Correo Argentino')
-    setCodigoSeguimiento(item.codigo_seguimiento || '')
-    setFechaEnvio(item.fecha_envio || '')
   }
 
   function obtenerLinkSeguimiento(empresa) {
@@ -211,35 +262,47 @@ export default function AdminList() {
     return ''
   }
 
-  async function enviarEmailResolucion(item) {
-    if (!item.email) { alert('Este reclamo no tiene email cargado'); return false }
-    let cuerpo = empresaEnvio !== 'Logistica Propia'
-      ? `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\n\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados. A continuación le dejamos los datos para el seguimiento de su envío.\n\nEmpresa: ${empresaEnvio}\nCódigo de seguimiento: ${codigoSeguimiento}\nLink de seguimiento: ${obtenerLinkSeguimiento(empresaEnvio)}`
-      : `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\n\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados.\n\nEmpresa: Logística Propia\nFecha de envío: ${fechaEnvio}`
-    try {
-      const { data, error } = await supabase.functions.invoke('enviar-email-resolucion', { body: { to: String(item.email || '').trim(), subject: `TEMPTECH - Resolución de reclamo ${item.tracking_id}`, text: cuerpo, tracking_id: item.tracking_id || '', empresa: empresaEnvio, tracking: empresaEnvio === 'Logistica Propia' ? '' : codigoSeguimiento, fecha: empresaEnvio === 'Logistica Propia' ? fechaEnvio : '' } })
-      if (error || data?.error) { alert(`Error al enviar email: ${error?.message || JSON.stringify(data)}`); return false }
-      return true
-    } catch (err) { alert(`Error inesperado al enviar email: ${err.message}`); return false }
-  }
+  // Guardar resolución o devolución
+  async function guardarEnvio(item, { empresa, codigo, fechaEnvio, textoEmail, tipo }) {
+    if (!empresa) { alert('Seleccioná una empresa'); return }
+    if (empresa !== 'Logistica Propia' && !codigo) { alert('Ingresá el código de seguimiento'); return }
+    if (empresa === 'Logistica Propia' && !fechaEnvio) { alert('Seleccioná una fecha de envío'); return }
 
-  async function guardarResolucion(item) {
-    if (!empresaEnvio) { alert('Seleccioná una empresa'); return }
-    if (empresaEnvio !== 'Logistica Propia' && !codigoSeguimiento) { alert('Ingresá el código de seguimiento'); return }
-    if (empresaEnvio === 'Logistica Propia' && !fechaEnvio) { alert('Seleccioná una fecha de envío'); return }
-    const texto = window.prompt('Nota para RESOLUCION:', '')
-    if (texto === null) return
-    const nuevaNota = armarLineaNota('RESOLUCION', texto)
-    const { error } = await supabase.from('devoluciones').update({ estado: 'Resolucion', empresa_envio: empresaEnvio, codigo_seguimiento: empresaEnvio === 'Logistica Propia' ? null : codigoSeguimiento, fecha_envio: empresaEnvio === 'Logistica Propia' ? fechaEnvio : null, fecha_resolucion: new Date().toISOString(), notas: unirNotas(item.notas, nuevaNota) }).eq('id', item.id)
-    if (error) { alert('Error al guardar resolución'); return }
-    const okEmail = await enviarEmailResolucion(item)
-    if (!okEmail) { alert('Se guardó la resolución pero falló el envío del email'); return }
+    const notaTexto = window.prompt(`Nota para ${tipo.toUpperCase()}:`, '')
+    if (notaTexto === null) return
+
+    const nuevaNota = armarLineaNota(tipo.toUpperCase(), notaTexto)
+
+    const { error } = await supabase.from('devoluciones').update({
+      estado: tipo,
+      empresa_envio: empresa,
+      codigo_seguimiento: empresa === 'Logistica Propia' ? null : codigo,
+      fecha_envio: empresa === 'Logistica Propia' ? fechaEnvio : null,
+      fecha_resolucion: new Date().toISOString(),
+      notas: unirNotas(item.notas, nuevaNota),
+    }).eq('id', item.id)
+
+    if (error) { alert(`Error al guardar ${tipo}`); return }
+
+    // Enviar email con texto editable
+    try {
+      const { data, error: emailError } = await supabase.functions.invoke('enviar-email-resolucion', {
+        body: {
+          to: String(item.email || '').trim(),
+          subject: `TEMPTECH - ${tipo === 'Devolucion' ? 'Devolución' : 'Resolución'} de reclamo ${item.tracking_id}`,
+          text: textoEmail,
+          tracking_id: item.tracking_id || '',
+          empresa,
+          tracking: empresa === 'Logistica Propia' ? '' : codigo,
+          fecha: empresa === 'Logistica Propia' ? fechaEnvio : '',
+        },
+      })
+      if (emailError || data?.error) { alert(`Se guardó pero falló el email: ${emailError?.message || JSON.stringify(data)}`); }
+    } catch (err) { alert(`Error al enviar email: ${err.message}`) }
+
+    setPanelAbierto(null)
     await cargar()
-    setEmpresaEnvio('Correo Argentino')
-    setCodigoSeguimiento('')
-    setFechaEnvio('')
-    setResolucionAbiertaId(null)
-    alert('Resolución guardada y email enviado ✅')
+    alert(`${tipo === 'Devolucion' ? 'Devolución' : 'Resolución'} guardada y email enviado ✅`)
   }
 
   async function cerrarCaso(item) {
@@ -255,20 +318,20 @@ export default function AdminList() {
     try {
       const { data, error } = await supabase.from('devoluciones').select('*').order('fecha_creacion', { ascending: false })
       if (error) { alert('No se pudo exportar el Excel'); return }
-      const filas = (data || []).map(item => ({ ID: item.id || '', Tracking: item.tracking_id || '', Estado: item.estado || '', Aprobado: item.aprobado || '', 'Fecha ingreso': item.fecha_ingreso ? formatearFecha(item.fecha_ingreso) : '', 'Fecha creación': item.fecha_creacion ? formatearFecha(item.fecha_creacion) : '', 'Fecha compra': item.fecha_compra ? formatearFecha(item.fecha_compra) : '', 'Días garantía': item.dias_garantia ?? '', Cliente: item.nombre_apellido || item.nombre || '', Dirección: item.direccion || '', Localidad: item.localidad || '', Provincia: item.provincia || '', 'Código postal': item.codigo_postal || '', Teléfono: item.telefono || '', Email: item.email || '', Canal: item.canal || '', Vendedor: item.vendedor || '', 'Número venta manual': item.numero_venta_manual || '', Producto: item.producto || '', Modelo: item.modelo || '', Motivo: item.motivo || '', 'Descripción falla': item.descripcion_falla || '', Garantía: item.garantia || '', 'Fecha aprobado': item.fecha_aprobado ? formatearFecha(item.fecha_aprobado) : '', 'Fecha desaprobado': item.fecha_desaprobado ? formatearFecha(item.fecha_desaprobado) : '', 'Motivo rechazo': item.motivo_rechazo || '', Notas: item.notas || '', 'Empresa envío': item.empresa_envio || '', 'Código seguimiento': item.codigo_seguimiento || '', 'Fecha envío': item.fecha_envio ? formatearFecha(item.fecha_envio) : '', 'Fecha resolución': item.fecha_resolucion ? formatearFecha(item.fecha_resolucion) : '', 'Comprobante URL': item.comprobante_url || '', 'Imagen producto URL': item.imagen_producto_url || '' }))
+      const filas = (data || []).map(item => ({ ID: item.id || '', Tracking: item.tracking_id || '', Estado: item.estado || '', Aprobado: item.aprobado || '', 'Fecha ingreso': item.fecha_ingreso ? formatearFecha(item.fecha_ingreso) : '', 'Fecha creación': item.fecha_creacion ? formatearFecha(item.fecha_creacion) : '', 'Fecha compra': item.fecha_compra ? formatearFecha(item.fecha_compra) : '', 'Días garantía': item.dias_garantia ?? '', Cliente: item.nombre_apellido || item.nombre || '', Dirección: item.direccion || '', Localidad: item.localidad || '', Provincia: item.provincia || '', 'Código postal': item.codigo_postal || '', Teléfono: item.telefono || '', Email: item.email || '', Canal: item.canal || '', Vendedor: item.vendedor || '', 'Número venta': item.numero_venta_manual || '', Producto: item.producto || '', Modelo: item.modelo || '', Motivo: item.motivo || '', Descripción: item.descripcion_falla || '', 'Motivo rechazo': item.motivo_rechazo || '', Notas: item.notas || '', 'Empresa envío': item.empresa_envio || '', 'Código seguimiento': item.codigo_seguimiento || '', 'Fecha envío': item.fecha_envio ? formatearFecha(item.fecha_envio) : '', 'Fecha resolución': item.fecha_resolucion ? formatearFecha(item.fecha_resolucion) : '' }))
       const ws = XLSX.utils.json_to_sheet(filas)
-      ws['!cols'] = [8,22,14,12,20,20,20,14,28,32,18,18,14,18,30,18,20,20,24,20,24,40,14,20,20,30,60,20,22,20,20,50,50].map(wch => ({ wch }))
+      ws['!cols'] = [8,22,14,12,20,20,20,14,28,32,18,18,14,18,30,18,20,20,24,20,24,40,30,60,20,22,20,20].map(wch => ({ wch }))
       const range = XLSX.utils.decode_range(ws['!ref'])
       ws['!autofilter'] = { ref: ws['!ref'] }
       for (let col = range.s.c; col <= range.e.c; col++) {
-        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col })
-        if (!ws[cellAddress]) continue
-        ws[cellAddress].s = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '1F4E78' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: { top: { style: 'thin', color: { rgb: 'D9D9D9' } }, bottom: { style: 'thin', color: { rgb: 'D9D9D9' } }, left: { style: 'thin', color: { rgb: 'D9D9D9' } }, right: { style: 'thin', color: { rgb: 'D9D9D9' } } } }
+        const ca = XLSX.utils.encode_cell({ r: 0, c: col })
+        if (!ws[ca]) continue
+        ws[ca].s = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '1F4E78' } }, alignment: { horizontal: 'center' } }
       }
       const wb = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(wb, ws, 'Reclamos')
       XLSX.writeFile(wb, `reclamos_temptech_${new Date().toISOString().slice(0, 10)}.xlsx`)
-    } catch (err) { alert('Error al exportar el Excel') }
+    } catch { alert('Error al exportar el Excel') }
   }
 
   const inputStyle = { background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, outline: 'none', fontFamily: T.font, width: '100%' }
@@ -278,7 +341,7 @@ export default function AdminList() {
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
 
       {/* Topbar */}
-      <header style={{ background: T.surface, borderBottom: `1px solid ${T.border}`, padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)' }}>
+      <header style={{ background: T.surface, borderBottom: `1px solid ${T.border}`, padding: '0 32px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ height: 3, width: 32, background: T.grad, borderRadius: 2 }} />
           <img src={LOGO_URL} alt="TEMPTECH" style={{ height: 24, objectFit: 'contain' }} onError={e => e.currentTarget.style.display = 'none'} />
@@ -299,27 +362,22 @@ export default function AdminList() {
               <option value="Ingresado">Ingresado</option>
               <option value="pendiente">Pendiente</option>
               <option value="Resolucion">Resolución</option>
+              <option value="Devolucion">Devolución</option>
               <option value="rechazado">Rechazado</option>
               <option value="cerrado">Cerrado</option>
             </select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 200 }}>
-            <input type="text" placeholder="🔍 Buscar por tracking..." value={busquedaTracking} onChange={e => setBusquedaTracking(e.target.value)} style={{ ...inputStyle }} />
+            <input type="text" placeholder="🔍 Buscar por tracking..." value={busquedaTracking} onChange={e => setBusquedaTracking(e.target.value)} style={inputStyle} />
             {busquedaTracking && <button onClick={() => setBusquedaTracking('')} style={{ background: T.surface3, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text2, fontSize: 12, cursor: 'pointer', fontFamily: T.font, whiteSpace: 'nowrap' }}>Limpiar</button>}
           </div>
           <button onClick={exportarExcel} style={{ background: T.greenDim, color: T.green, border: `1px solid ${T.green}40`, borderRadius: T.radius, padding: '8px 16px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: T.font, whiteSpace: 'nowrap' }}>
             📊 Exportar Excel
           </button>
-          <div style={{ fontSize: 12, color: T.text3, marginLeft: 'auto' }}>
-            {datosFiltrados.length} reclamo{datosFiltrados.length !== 1 ? 's' : ''}
-          </div>
+          <div style={{ fontSize: 12, color: T.text3, marginLeft: 'auto' }}>{datosFiltrados.length} reclamo{datosFiltrados.length !== 1 ? 's' : ''}</div>
         </div>
 
-        {errorTexto && (
-          <div style={{ background: T.redDim, border: `1px solid ${T.red}40`, color: T.red, padding: '14px 18px', borderRadius: T.radiusLg, marginBottom: 20, fontSize: 13 }}>
-            ⚠ Error: {errorTexto}
-          </div>
-        )}
+        {errorTexto && <div style={{ background: T.redDim, border: `1px solid ${T.red}40`, color: T.red, padding: '14px 18px', borderRadius: T.radiusLg, marginBottom: 20, fontSize: 13 }}>⚠ Error: {errorTexto}</div>}
 
         {cargando ? (
           <div style={{ textAlign: 'center', padding: 60, color: T.text3, fontSize: 14 }}>Cargando reclamos...</div>
@@ -329,30 +387,22 @@ export default function AdminList() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {datosFiltrados.map(item => (
               <div key={item.id} style={{ background: T.surface, border: `1px solid ${item.aprobado === 'SI' ? T.green + '40' : T.border}`, borderRadius: T.radiusLg, overflow: 'hidden', position: 'relative' }}>
-                {/* Aprobado watermark */}
                 {item.aprobado === 'SI' && (
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%) rotate(-25deg)', fontSize: 54, fontWeight: 800, color: 'rgba(61,214,140,0.06)', pointerEvents: 'none', userSelect: 'none', whiteSpace: 'nowrap', zIndex: 0 }}>
-                    APROBADO
-                  </div>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%) rotate(-25deg)', fontSize: 54, fontWeight: 800, color: 'rgba(61,214,140,0.06)', pointerEvents: 'none', userSelect: 'none', whiteSpace: 'nowrap', zIndex: 0 }}>APROBADO</div>
                 )}
 
                 <div style={{ position: 'relative', zIndex: 1 }}>
-                  {/* Card header */}
+                  {/* Header */}
                   <div style={{ padding: '16px 22px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: '#7b9fff', background: 'rgba(74,108,247,0.1)', padding: '4px 10px', borderRadius: 6 }}>
-                        {item.tracking_id || `#${item.id}`}
-                      </span>
+                      <span style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: '#7b9fff', background: 'rgba(74,108,247,0.1)', padding: '4px 10px', borderRadius: 6 }}>{item.tracking_id || `#${item.id}`}</span>
                       <Badge estado={item.estado} aprobado={item.aprobado} />
                     </div>
-                    <div style={{ fontSize: 12, color: T.text3 }}>
-                      {formatearFecha(item.fecha_creacion)}
-                    </div>
+                    <div style={{ fontSize: 12, color: T.text3 }}>{formatearFecha(item.fecha_creacion)}</div>
                   </div>
 
-                  {/* Card body */}
-                  <div style={{ padding: '18px 22px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0 32px' }}>
-                    {/* Columna 1 */}
+                  {/* Body */}
+                  <div style={{ padding: '18px 22px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0 32px' }}>
                     <div>
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.text3, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>Cliente</div>
                       <InfoRow label="Nombre" value={item.nombre_apellido || item.nombre} />
@@ -361,8 +411,6 @@ export default function AdminList() {
                       <InfoRow label="Dirección" value={item.direccion} />
                       <InfoRow label="Localidad" value={`${item.localidad || ''} ${item.provincia || ''} ${item.codigo_postal || ''}`} />
                     </div>
-
-                    {/* Columna 2 */}
                     <div>
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.text3, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>Producto</div>
                       <InfoRow label="Producto" value={item.producto} />
@@ -371,8 +419,6 @@ export default function AdminList() {
                       <InfoRow label="Descripción" value={item.descripcion_falla} />
                       <InfoRow label="Días garantía" value={item.dias_garantia != null ? `${item.dias_garantia} días` : null} />
                     </div>
-
-                    {/* Columna 3 */}
                     <div>
                       <div style={{ fontSize: 10, fontWeight: 700, color: T.text3, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>Compra</div>
                       <InfoRow label="Canal" value={item.canal} />
@@ -383,7 +429,7 @@ export default function AdminList() {
                     </div>
                   </div>
 
-                  {/* Notas + archivos */}
+                  {/* Notas y archivos */}
                   {(item.notas || item.motivo_rechazo || item.comprobante_url || item.imagen_producto_url || item.empresa_envio) && (
                     <div style={{ margin: '0 22px 16px', padding: 14, background: T.surface2, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
                       {item.motivo_rechazo && <div style={{ fontSize: 13, color: T.red, marginBottom: 8 }}><strong>Motivo rechazo:</strong> {item.motivo_rechazo}</div>}
@@ -396,18 +442,16 @@ export default function AdminList() {
                           {item.comprobante_url && (
                             <div>
                               <div style={{ fontSize: 11, color: T.text3, marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Comprobante</div>
-                              <a href={item.comprobante_url} target="_blank" rel="noreferrer" style={{ display: 'block' }}>
-                                <img src={item.comprobante_url} alt="Comprobante" style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: `1px solid ${T.border}` }} onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'block' }} />
-                                <div style={{ display: 'none', fontSize: 12, color: '#7b9fff', textDecoration: 'underline' }}>Ver comprobante</div>
+                              <a href={item.comprobante_url} target="_blank" rel="noreferrer">
+                                <img src={item.comprobante_url} alt="Comprobante" style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: `1px solid ${T.border}` }} onError={e => e.currentTarget.style.display = 'none'} />
                               </a>
                             </div>
                           )}
                           {item.imagen_producto_url && (
                             <div>
                               <div style={{ fontSize: 11, color: T.text3, marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Imagen producto</div>
-                              <a href={item.imagen_producto_url} target="_blank" rel="noreferrer" style={{ display: 'block' }}>
-                                <img src={item.imagen_producto_url} alt="Producto" style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: `1px solid ${T.border}` }} onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'block' }} />
-                                <div style={{ display: 'none', fontSize: 12, color: '#7b9fff', textDecoration: 'underline' }}>Ver imagen</div>
+                              <a href={item.imagen_producto_url} target="_blank" rel="noreferrer">
+                                <img src={item.imagen_producto_url} alt="Producto" style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: `1px solid ${T.border}` }} onError={e => e.currentTarget.style.display = 'none'} />
                               </a>
                             </div>
                           )}
@@ -419,7 +463,8 @@ export default function AdminList() {
                   {/* Acciones */}
                   <div style={{ padding: '14px 22px', borderTop: `1px solid ${T.border}`, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                     <Btn onClick={() => cambiarEstado(item, 'pendiente')} disabled={item.estado === 'cerrado'}>Pendiente</Btn>
-                    <Btn onClick={() => abrirResolucion(item)} disabled={item.aprobado !== 'SI'} variant="primary">Resolución</Btn>
+                    <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Resolucion' })} disabled={item.aprobado !== 'SI'} variant="primary">🚚 Resolución</Btn>
+                    <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Devolucion' })} disabled={item.aprobado !== 'SI'} variant="orange">📦 Devolución</Btn>
                     <Btn onClick={() => marcarAprobado(item)} disabled={item.aprobado === 'SI'} variant="success">✓ Aprobar</Btn>
                     <Btn onClick={() => handleDesaprobar(item)} disabled={item.aprobado !== 'SI' || item.estado === 'cerrado'} variant="warn">Desaprobar</Btn>
                     <Btn onClick={() => { setRechazoAbiertoId(item.id); setTextoRechazo(item.motivo_rechazo || '') }} disabled={item.estado === 'cerrado'} variant="danger">Rechazar</Btn>
@@ -438,46 +483,15 @@ export default function AdminList() {
                     </div>
                   )}
 
-                  {/* Panel resolución */}
-                  {resolucionAbiertaId === item.id && (
-                    <div style={{ margin: '0 22px 18px', padding: 16, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: T.radius }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: T.purple, marginBottom: 14 }}>Datos de resolución</div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                        <div>
-                          <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Empresa</label>
-                          <select value={empresaEnvio} onChange={e => setEmpresaEnvio(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%' }}>
-                            <option value="Correo Argentino">Correo Argentino</option>
-                            <option value="Andreani">Andreani</option>
-                            <option value="Logistica Propia">Logística Propia</option>
-                          </select>
-                        </div>
-                        {empresaEnvio !== 'Logistica Propia' ? (
-                          <div>
-                            <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Código de seguimiento</label>
-                            <input type="text" value={codigoSeguimiento} onChange={e => setCodigoSeguimiento(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%', outline: 'none' }} placeholder="Código de seguimiento" />
-                          </div>
-                        ) : (
-                          <div>
-                            <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Fecha de envío</label>
-                            <input type="date" value={fechaEnvio} onChange={e => setFechaEnvio(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%', outline: 'none' }} />
-                          </div>
-                        )}
-                      </div>
-                      {empresaEnvio !== 'Logistica Propia' && (
-                        <div style={{ marginBottom: 12, fontSize: 12, color: T.text3 }}>
-                          <a href={obtenerLinkSeguimiento(empresaEnvio)} target="_blank" rel="noreferrer" style={{ color: '#7b9fff' }}>🔗 Abrir link de seguimiento</a>
-                        </div>
-                      )}
-                      <div style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: 12, fontSize: 12, color: T.text2, whiteSpace: 'pre-line', marginBottom: 12, lineHeight: 1.7 }}>
-                        {empresaEnvio !== 'Logistica Propia'
-                          ? `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados.\n\nEmpresa: ${empresaEnvio}\nCódigo de seguimiento: ${codigoSeguimiento || '[completar]'}\nLink: ${obtenerLinkSeguimiento(empresaEnvio)}`
-                          : `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados.\n\nEmpresa: Logística Propia\nFecha de envío: ${fechaEnvio || '[seleccionar]'}`}
-                      </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <Btn variant="primary" onClick={() => guardarResolucion(item)}>Guardar y enviar email</Btn>
-                        <Btn onClick={() => { setResolucionAbiertaId(null); setEmpresaEnvio('Correo Argentino'); setCodigoSeguimiento(''); setFechaEnvio('') }}>Cancelar</Btn>
-                      </div>
-                    </div>
+                  {/* Panel resolución / devolución */}
+                  {panelAbierto?.id === item.id && (
+                    <PanelEnvio
+                      item={item}
+                      tipo={panelAbierto.tipo}
+                      onClose={() => setPanelAbierto(null)}
+                      onGuardar={(datos) => guardarEnvio(item, datos)}
+                      obtenerLinkSeguimiento={obtenerLinkSeguimiento}
+                    />
                   )}
                 </div>
               </div>
