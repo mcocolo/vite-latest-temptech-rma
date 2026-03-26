@@ -94,13 +94,16 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
     ? `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nTe adjuntamos la etiqueta para que nos realices la devolución de la unidad defectuosa en garantía.`
     : `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados. A continuación le dejamos los datos para el seguimiento de su envío.`
 
-  const [empresa, setEmpresa]         = useState(item.empresa_envio || 'Correo Argentino')
-  const [codigo, setCodigo]           = useState(item.codigo_seguimiento || '')
-  const [fechaEnvio, setFechaEnvio]   = useState(item.fecha_envio || '')
-  const [textoEmail, setTextoEmail]   = useState(defaultTexto)
-  // Archivo adjunto — solo para Devolución
-  const [adjunto, setAdjunto]         = useState(null)
-  const [subiendo, setSubiendo]       = useState(false)
+  const [empresa, setEmpresa]       = useState(item.empresa_envio || 'Correo Argentino')
+  const [codigo, setCodigo]         = useState(item.codigo_seguimiento || '')
+  const [fechaEnvio, setFechaEnvio] = useState(item.fecha_envio || '')
+  const [textoEmail, setTextoEmail] = useState(defaultTexto)
+  // Múltiples archivos adjuntos para Devolución
+  const [adjuntos, setAdjuntos]     = useState([])
+  const [subiendo, setSubiendo]     = useState(false)
+
+  const addAdjuntos    = (files) => setAdjuntos(prev => [...prev, ...files])
+  const removeAdjunto  = (idx)   => setAdjuntos(prev => prev.filter((_, i) => i !== idx))
 
   const color     = isDevolucion ? T.orange : T.purple
   const colorBg   = isDevolucion ? 'rgba(251,146,60,0.08)'   : 'rgba(167,139,250,0.08)'
@@ -108,17 +111,18 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
 
   async function handleGuardar() {
     if (!isDevolucion) {
-      // Resolución: empresa obligatoria
       if (!empresa) { alert('Seleccioná una empresa'); return }
       if (empresa !== 'Logistica Propia' && !codigo) { alert('Ingresá el código de seguimiento'); return }
       if (empresa === 'Logistica Propia' && !fechaEnvio) { alert('Seleccioná una fecha de envío'); return }
     }
 
-    let adjuntoUrl = null
-    if (isDevolucion && adjunto) {
+    // Subir todos los adjuntos
+    let adjuntosUrls = []
+    if (isDevolucion && adjuntos.length > 0) {
       setSubiendo(true)
       try {
-        adjuntoUrl = await subirArchivoAdmin(adjunto, item.tracking_id)
+        adjuntosUrls = await Promise.all(adjuntos.map(f => subirArchivoAdmin(f, item.tracking_id)))
+        adjuntosUrls = adjuntosUrls.filter(Boolean)
       } catch (err) {
         alert(`Error subiendo archivo: ${err.message}`)
         setSubiendo(false)
@@ -127,7 +131,7 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
       setSubiendo(false)
     }
 
-    onGuardar({ empresa, codigo, fechaEnvio, textoEmail, tipo, adjuntoUrl })
+    onGuardar({ empresa, codigo, fechaEnvio, textoEmail, tipo, adjuntosUrls })
   }
 
   return (
@@ -161,26 +165,38 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
         </div>
       )}
 
-      {/* Adjunto etiqueta — solo Devolución */}
+      {/* Adjuntos múltiples — solo Devolución */}
       {isDevolucion && (
         <div style={{ marginBottom: 12 }}>
           <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-            Adjuntar etiqueta de devolución (PDF o imagen)
+            Adjuntar archivos (etiqueta, instrucciones, etc.)
           </label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <label style={{ background: T.surface2, border: `1px dashed ${T.border2}`, borderRadius: T.radius, padding: '8px 14px', cursor: 'pointer', fontSize: 13, color: T.text2, display: 'flex', alignItems: 'center', gap: 8, transition: 'border .2s' }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = T.orange}
-              onMouseLeave={e => e.currentTarget.style.borderColor = T.border2}
-            >
-              <span style={{ fontSize: 16 }}>📎</span>
-              {adjunto ? adjunto.name : 'Seleccionar archivo'}
-              <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => setAdjunto(e.target.files?.[0] || null)} />
-            </label>
-            {adjunto && (
-              <button type="button" onClick={() => setAdjunto(null)} style={{ background: 'none', border: 'none', color: T.red, cursor: 'pointer', fontSize: 18 }}>×</button>
-            )}
-          </div>
-          {adjunto && <div style={{ fontSize: 11, color: T.text3, marginTop: 4 }}>El archivo se va a subir y el link se adjuntará en el email</div>}
+
+          {/* Previews */}
+          {adjuntos.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+              {adjuntos.map((f, idx) => (
+                <div key={idx} style={{ background: T.surface2, border: `1px solid ${T.border2}`, borderRadius: 8, padding: '5px 10px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                  <span style={{ fontSize: 16 }}>{f.type?.startsWith('image/') ? '🖼' : '📄'}</span>
+                  <span style={{ color: T.text2, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                  <button type="button" onClick={() => removeAdjunto(idx)} style={{ background: 'none', border: 'none', color: T.red, cursor: 'pointer', fontSize: 16, padding: 0 }}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Botón agregar */}
+          <label style={{ background: T.surface2, border: `1px dashed ${T.border2}`, borderRadius: T.radius, padding: '8px 14px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, color: T.text2 }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = T.orange}
+            onMouseLeave={e => e.currentTarget.style.borderColor = T.border2}
+          >
+            <span>📎</span>
+            <span>{adjuntos.length > 0 ? `Agregar más (${adjuntos.length} adjunto${adjuntos.length !== 1 ? 's' : ''})` : 'Agregar archivo'}</span>
+            <input type="file" accept="image/*,.pdf" multiple style={{ display: 'none' }}
+              onChange={e => { if (e.target.files?.length) addAdjuntos(Array.from(e.target.files)); e.target.value = '' }}
+            />
+          </label>
+          {adjuntos.length > 0 && <div style={{ fontSize: 11, color: T.text3, marginTop: 4 }}>Los links se adjuntarán al final del email</div>}
         </div>
       )}
 
@@ -199,7 +215,7 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <Btn variant={isDevolucion ? 'orange' : 'primary'} onClick={handleGuardar} disabled={subiendo}>
-          {subiendo ? 'Subiendo archivo...' : 'Guardar y enviar email'}
+          {subiendo ? 'Subiendo archivos...' : 'Guardar y enviar email'}
         </Btn>
         <Btn onClick={onClose}>Cancelar</Btn>
       </div>
@@ -290,15 +306,15 @@ export default function AdminList() {
     await cargar()
   }
 
-  async function guardarEnvio(item, { empresa, codigo, fechaEnvio, textoEmail, tipo, adjuntoUrl }) {
+  async function guardarEnvio(item, { empresa, codigo, fechaEnvio, textoEmail, tipo, adjuntosUrls }) {
     const notaTexto = window.prompt(`Nota para ${tipo.toUpperCase()}:`, '')
     if (notaTexto === null) return
     const nuevaNota = armarLineaNota(tipo.toUpperCase(), notaTexto)
 
-    // Armar texto final con link del adjunto si existe
+    // Agregar links de todos los adjuntos al final del texto
     let textoFinal = textoEmail
-    if (adjuntoUrl) {
-      textoFinal += `\n\nEtiqueta de devolución: ${adjuntoUrl}`
+    if (adjuntosUrls && adjuntosUrls.length > 0) {
+      textoFinal += '\n\nArchivos adjuntos:\n' + adjuntosUrls.map((url, i) => `${i + 1}. ${url}`).join('\n')
     }
 
     const { error } = await supabase.from('devoluciones').update({
@@ -414,8 +430,8 @@ export default function AdminList() {
               const esDevolucion = item.estado === 'Devolucion'
               const aprobadoSI   = item.aprobado === 'SI'
 
-              // Desaprobar: bloqueado si cerrado O si ya está en Resolución o Devolución
-              const desaprobarBloqueado = !aprobadoSI || esCerrado || esResolucion || esDevolucion
+              // Desaprobar: bloqueado solo si cerrado o no aprobado
+              const desaprobarBloqueado = !aprobadoSI || esCerrado
 
               return (
                 <div key={item.id} style={{ background: T.surface, border: `1px solid ${aprobadoSI ? T.green + '40' : T.border}`, borderRadius: T.radiusLg, overflow: 'hidden', position: 'relative' }}>

@@ -281,8 +281,11 @@ export default function PublicForm() {
           vendedor: form.vendedor.trim() || null, ventaManual: form.ventaManual.trim() || null,
           producto: form.producto, modelo: form.modelo, motivo: form.motivo,
           descripcion: form.descripcionFalla.trim(), diasGarantia,
+          // Enviamos TODAS las URLs al email
           comprobanteUrl: comprobantesUrls[0] || null,
+          comprobantesUrls: comprobantesUrls.filter(Boolean),
           imagenProductoUrl: imagenesUrls[0] || null,
+          imagenesProductoUrls: imagenesUrls.filter(Boolean),
         },
       })
 
