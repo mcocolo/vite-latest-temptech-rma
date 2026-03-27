@@ -288,6 +288,7 @@ export default function AdminList() {
   const [notaRechazo, setNotaRechazo]           = useState('')
   const [panelAbierto, setPanelAbierto]         = useState(null)
   const [notificarServiceId, setNotificarServiceId] = useState(null)
+  const [notasInput, setNotasInput] = useState({})
   const navigate = useNavigate()
 
   const datosFiltrados = datos.filter(item => !busquedaTracking || item.tracking_id?.toLowerCase().includes(busquedaTracking.toLowerCase()))
@@ -466,6 +467,16 @@ export default function AdminList() {
     await cargar()
   }
 
+  async function guardarNotaManual(item) {
+    const texto = (notasInput[item.id] || '').trim()
+    if (!texto) { alert('Escribí una nota antes de guardar'); return }
+    const nuevaNota = armarLineaNota('NOTA', texto)
+    const { error } = await supabase.from('devoluciones').update({ notas: unirNotas(item.notas, nuevaNota) }).eq('id', item.id)
+    if (error) { alert('Error al guardar la nota'); return }
+    setNotasInput(prev => ({ ...prev, [item.id]: '' }))
+    await cargar()
+  }
+
   async function exportarExcel() {
     try {
       const { data, error } = await supabase.from('devoluciones').select('*').order('fecha_creacion', { ascending: false })
@@ -588,13 +599,24 @@ export default function AdminList() {
                     </div>
 
                     {/* Notas y archivos */}
-                    {(item.notas || item.motivo_rechazo || item.comprobante_url || item.imagen_producto_url || item.empresa_envio || (item.comprobantes_urls?.length > 0) || (item.imagenes_producto_urls?.length > 0)) && (
-                      <div style={{ margin: '0 22px 16px', padding: 14, background: T.surface2, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
+                    <div style={{ margin: '0 22px 16px', padding: 14, background: T.surface2, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
                         {item.motivo_rechazo && <div style={{ fontSize: 13, color: T.red, marginBottom: 8 }}><strong>Motivo rechazo:</strong> {item.motivo_rechazo}</div>}
                         {item.empresa_envio && <InfoRow label="Empresa envío" value={item.empresa_envio} />}
                         {item.codigo_seguimiento && <InfoRow label="Código seguimiento" value={item.codigo_seguimiento} />}
                         {item.fecha_envio && <InfoRow label="Fecha envío" value={formatearFecha(item.fecha_envio)} />}
                         {item.notas && <div style={{ fontSize: 12, color: T.text3, whiteSpace: 'pre-line', marginTop: 8, borderTop: `1px solid ${T.border}`, paddingTop: 8 }}>{item.notas}</div>}
+
+                        {/* Nota manual */}
+                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.border}`, display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                          <textarea
+                            value={notasInput[item.id] || ''}
+                            onChange={e => setNotasInput(prev => ({ ...prev, [item.id]: e.target.value }))}
+                            placeholder="Agregar nota..."
+                            rows={2}
+                            style={{ flex: 1, background: T.surface3, border: `1px solid ${T.border2}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 12, fontFamily: T.font, resize: 'vertical', outline: 'none', lineHeight: 1.6 }}
+                          />
+                          <Btn variant="ghost" onClick={() => guardarNotaManual(item)}>💾 Guardar nota</Btn>
+                        </div>
 
                         {/* Comprobantes — mostrar todos */}
                         {(() => {
@@ -658,7 +680,7 @@ export default function AdminList() {
                           )
                         })()}
                       </div>
-                    )}
+                    </div>
 
                     {/* Acciones */}
                     <div style={{ padding: '14px 22px', borderTop: `1px solid ${T.border}`, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
