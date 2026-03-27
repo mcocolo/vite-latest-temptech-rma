@@ -596,6 +596,7 @@ export default function AdminList() {
                         <InfoRow label="# Venta" value={item.numero_venta_manual} />
                         <InfoRow label="Fecha compra" value={formatearFecha(item.fecha_compra)} />
                         <InfoRow label="Fecha ingreso" value={formatearFecha(item.fecha_ingreso)} />
+                        {(item.fecha_envio || item.fecha_resolucion) && <InfoRow label="Fecha de envío" value={formatearFecha(item.fecha_envio || item.fecha_resolucion)} />}
                       </div>
                     </div>
 
