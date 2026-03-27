@@ -118,7 +118,7 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
   const colorBord = isDevolucion ? 'rgba(251,146,60,0.3)'  : isService ? 'rgba(45,212,191,0.3)'  : 'rgba(167,139,250,0.3)'
 
   async function handleGuardar() {
-    if (!isDevolucion) {
+    if (!isDevolucion && !isService) {
       if (!empresa) { alert('Seleccioná una empresa'); return }
       if (empresa !== 'Logistica Propia' && !codigo) { alert('Ingresá el código de seguimiento'); return }
       if (empresa === 'Logistica Propia' && !fechaEnvio) { alert('Seleccioná una fecha de envío'); return }
@@ -194,10 +194,7 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
           )}
 
           {/* Botón agregar */}
-          <label style={{ background: T.surface2, border: `1px dashed ${T.border2}`, borderRadius: T.radius, padding: '8px 14px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, color: T.text2 }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = T.orange}
-            onMouseLeave={e => e.currentTarget.style.borderColor = T.border2}
-          >
+          <label style={{ background: T.surface3, border: 'none', borderRadius: T.radius, padding: '8px 14px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, color: T.text2 }}>
             <span>📎</span>
             <span>{adjuntos.length > 0 ? `Agregar más (${adjuntos.length} adjunto${adjuntos.length !== 1 ? 's' : ''})` : 'Agregar archivo'}</span>
             <input type="file" accept="image/*,.pdf" multiple style={{ display: 'none' }}
@@ -235,7 +232,7 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
 function PanelNotificarService({ item, onClose, onGuardar }) {
   const [fechaVisita, setFechaVisita] = useState('')
   const defaultTexto = (fecha) =>
-    `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nLe informamos que el día "${fecha || '[FECHA]'}" estaremos realizando el retiro de la unidad y la entrega de un reemplazo. Recuerde el día del cambio tener el equipo listo para ser retirado y entregar sólo el Panel, es decir, conservar el kit de instalación (y sus respectivas patas en el caso de corresponder) para ser utilizadas con la nueva de reemplazo.`
+    `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nLe informamos que el día "${fecha || '[FECHA]'}" estaremos realizando el retiro de la unidad y la entrega de un reemplazo. Recuerde que el día del cambio tenés el equipo listo para ser retirado y entregar sólo el Panel, es decir, conservar el kit de instalación (y sus respectivas patas en el caso de corresponder) para ser utilizadas con la nueva unidad de reemplazo.`
   const [textoEmail, setTextoEmail] = useState(defaultTexto(''))
 
   // Actualizar texto cuando cambia la fecha
@@ -669,9 +666,7 @@ export default function AdminList() {
                       <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Resolucion' })} disabled={!aprobadoSI} variant="primary">🚚 Resolución</Btn>
                       <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Devolucion' })} disabled={!aprobadoSI} variant="orange">📦 Devolución</Btn>
                       <Btn onClick={() => setPanelAbierto({ id: item.id, tipo: 'Service' })} disabled={esCerrado} variant="teal">🔧 Service</Btn>
-                      {item.estado === 'Service' && (
-                        <Btn onClick={() => setNotificarServiceId(item.id)} disabled={esCerrado} variant="teal">📅 Notificar Service</Btn>
-                      )}
+                      <Btn onClick={() => setNotificarServiceId(item.id)} disabled={esCerrado} variant="teal">📅 Notificar Service</Btn>
                       <Btn onClick={() => marcarAprobado(item)} disabled={aprobadoSI} variant="success">✓ Aprobar</Btn>
                       <Btn onClick={() => handleDesaprobar(item)} disabled={desaprobarBloqueado} variant="warn">Desaprobar</Btn>
                       <Btn onClick={() => { setRechazoAbiertoId(item.id); setTextoRechazo(item.motivo_rechazo || DEFAULT_RECHAZO(item.tracking_id)); setNotaRechazo('') }} disabled={esCerrado} variant="danger">Rechazar</Btn>
