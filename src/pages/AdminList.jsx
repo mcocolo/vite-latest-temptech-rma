@@ -435,6 +435,7 @@ export default function AdminList() {
 
     const { error } = await supabase.from('devoluciones').update({
       fecha_resolucion: new Date().toISOString(),
+      fecha_envio: fechaVisita || null,
       notas: unirNotas(item.notas, nuevaNota),
     }).eq('id', item.id)
     if (error) { alert('Error al guardar'); return }
@@ -603,7 +604,8 @@ export default function AdminList() {
                         {item.motivo_rechazo && <div style={{ fontSize: 13, color: T.red, marginBottom: 8 }}><strong>Motivo rechazo:</strong> {item.motivo_rechazo}</div>}
                         {item.empresa_envio && <InfoRow label="Empresa envío" value={item.empresa_envio} />}
                         {item.codigo_seguimiento && <InfoRow label="Código seguimiento" value={item.codigo_seguimiento} />}
-                        {item.fecha_envio && <InfoRow label="Fecha envío" value={formatearFecha(item.fecha_envio)} />}
+                        {item.fecha_envio && <InfoRow label="Fecha de envío" value={formatearFecha(item.fecha_envio)} />}
+                        {item.fecha_resolucion && !item.fecha_envio && <InfoRow label="Fecha de envío" value={formatearFecha(item.fecha_resolucion)} />}
                         {item.notas && <div style={{ fontSize: 12, color: T.text3, whiteSpace: 'pre-line', marginTop: 8, borderTop: `1px solid ${T.border}`, paddingTop: 8 }}>{item.notas}</div>}
 
                         {/* Nota manual */}
