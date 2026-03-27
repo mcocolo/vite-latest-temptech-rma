@@ -680,7 +680,6 @@ export default function AdminList() {
                           )
                         })()}
                       </div>
-                    </div>
 
                     {/* Acciones */}
                     <div style={{ padding: '14px 22px', borderTop: `1px solid ${T.border}`, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
