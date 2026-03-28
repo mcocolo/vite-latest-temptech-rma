@@ -97,7 +97,7 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
   const isService    = tipo === 'Service'
 
   const defaultTexto = isDevolucion
-    ? `Primero que nada, le pedimos disculpas por los inconvenientes ocasionados. Trabajamos día a día para brindarle el mejor producto y servicio. Estamos a su disposición para ayudarlo a resolverlo a la brevedad.\n\nTenemos que gestionar el cambio de la unidad.\nTe indicamos los pasos a seguir:\n\nTe enviaremos una etiqueta de correo argentino que deberás adherir a la caja del producto que falla y despacharlo en la sucursal de correo ubicada en\nPILAR UP 21 | AV LUIS LAGOMARSINO 905. Buenos aires.\n\nLuego de despacharlo, te pediremos que nos envíes el comprobante de dicho despacho para que podamos activar el reenvío de una unidad nueva.\n\nLEER IMPORTANTE: Conservar el kit de instalación (no despacharlo con la unidad defectuosa) para poder utilizar con esta nueva unidad*\n\nAguardamos confirmación para poder enviarte la etiqueta.`
+    ? `En primer lugar, le pedimos disculpas por los inconvenientes ocasionados. Trabajamos día a día para brindarle el mejor producto y servicio. Estamos a su disposición para ayudarlo a resolverlo a la brevedad.\nTenemos que gestionar el cambio de la unidad.\nTe indicamos los pasos a seguir:\n\nTe enviaremos una etiqueta de correo argentino que deberás adherir a la caja del producto que falla y despacharlo en la sucursal de correo ubicada en\nPILAR UP 21 | AV LUIS LAGOMARSINO 905. Buenos aires.\n\nLuego de despacharlo, te pediremos que nos envíes el comprobante de dicho despacho para que podamos activar el reenvío de una unidad nueva.\n\nLEER IMPORTANTE: Conservar el kit de instalación (no despacharlo con la unidad defectuosa) para poder utilizar con esta nueva unidad*\n\nAguardamos confirmación para poder enviarte la etiqueta.`
     : isService
     ? `Nos pondremos en contacto para indicarte la fecha de cambio del producto.\nPara realizar el cambio, un miembro de nuestra logística le entregará una unidad de reemplazo para que pueda utilizar mientras realizamos la reparación de su producto.\nSolicitamos por favor, ser tan amable, el día de cambio tener el equipo listo para ser retirado y entregar sólo el Panel, es decir, conservar el kit de instalación (y sus respectivas patas en el caso de corresponder) para ser utilizadas con la unidad de reemplazo.\n\nSaludos.\nEquipo Soporte TEMPTECH`
     : `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados. A continuación le dejamos los datos para el seguimiento de su envío.`
@@ -334,7 +334,7 @@ export default function AdminList() {
     try {
       const resp = await fetch('/api/enviar-aprobado', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: (item.email || '').trim(), nombre: item.nombre_apellido || item.nombre || '', apellido: '', tracking_id: item.tracking_id || '' }) })
       const data = await resp.json().catch(() => ({}))
-      if (!resp.ok) alert(`Error mail aprobado: ${data.detalle || data.error}`)
+      if (!resp.ok) alert(`Error mail aprobado: ${data.detalle || data.error || `HTTP ${resp.status}`}`)
     } catch { alert('Se aprobó, pero falló el envío del mail') }
     await cargar()
   }
