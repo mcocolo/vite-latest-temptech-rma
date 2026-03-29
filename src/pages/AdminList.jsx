@@ -97,15 +97,33 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
   const isService    = tipo === 'Service'
 
   const defaultTexto = isDevolucion
-    ? `En primer lugar, le pedimos disculpas por los inconvenientes ocasionados. Trabajamos día a día para brindarle el mejor producto y servicio. Estamos a su disposición para ayudarlo a resolverlo a la brevedad.\nTenemos que gestionar el cambio de la unidad.\nTe indicamos los pasos a seguir:\n\nTe enviaremos una etiqueta de correo argentino que deberás adherir a la caja del producto que falla y despacharlo en la sucursal de correo ubicada en\nPILAR UP 21 | AV LUIS LAGOMARSINO 905. Buenos aires.\n\nLuego de despacharlo, te pediremos que nos envíes el comprobante de dicho despacho para que podamos activar el reenvío de una unidad nueva.\n\nLEER IMPORTANTE: Conservar el kit de instalación (no despacharlo con la unidad defectuosa) para poder utilizar con esta nueva unidad*\n\nAguardamos confirmación para poder enviarte la etiqueta.`
+    ? `Ante todo, le pedimos disculpas por los inconvenientes ocasionados. Trabajamos día a día 
+    para brindarle el mejor producto y servicio. Estamos a su disposición para resolverlo con la mayor celeridad posible.
+    \nTenemos que gestionar el cambio de la unidad. Te indicamos cuales los pasos a seguir:\n\nTe enviaremos una etiqueta de correo argentino que deberás adherir a la caja del producto que falla y despacharlo en la sucursal de correo ubicada 
+    en\nPILAR UP 21 | AV LUIS LAGOMARSINO 905. Buenos aires.\n\nLuego de despacharlo, te pediremos que nos envíes el comprobante de dicho despacho para que podamos activar el reenvío de una unidad nueva.\n\nLEER IMPORTANTE: Conservar el kit de instalación (no despacharlo con la unidad defectuosa) para poder utilizar con esta nueva unidad*\n\n
+    Aguardamos confirmación para poder enviarte la etiqueta.`
     : isService
     ? `Nos pondremos en contacto para indicarte la fecha de cambio del producto.\nPara realizar el cambio, un miembro de nuestra logística le entregará una unidad de reemplazo para que pueda utilizar mientras realizamos la reparación de su producto.\nSolicitamos por favor, ser tan amable, el día de cambio tener el equipo listo para ser retirado y entregar sólo el Panel, es decir, conservar el kit de instalación (y sus respectivas patas en el caso de corresponder) para ser utilizadas con la unidad de reemplazo.\n\nSaludos.\nEquipo Soporte TEMPTECH`
-    : `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nPrimero que nada queremos pedirle disculpas por los inconvenientes ocasionados. A continuación le dejamos los datos para el seguimiento de su envío.`
+    : null // generado dinámicamente para Resolución
+
+  const linkSeguimiento = (emp, cod) => {
+    if (!cod) return ''
+    const links = {
+      'Correo Argentino': `https://www.correoargentino.com.ar/formularios/e-commerce?id=${cod}`,
+      'Andreani': `https://www.andreani.com/#!/informacionEnvio/${cod}`,
+    }
+    return links[emp] || cod
+  }
+
+  const textoResolucion = (emp, cod) =>
+    `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nNuevamente queremos pedirle disculpas por los inconvenientes ocasionados.\nA continuación le dejamos los datos para el seguimiento de su envío.\n\nEmpresa: ${emp || ''}\nCódigo de seguimiento: ${cod || ''}\nLink de seguimiento: ${linkSeguimiento(emp, cod)}`
 
   const [empresa, setEmpresa]       = useState(item.empresa_envio || 'Correo Argentino')
   const [codigo, setCodigo]         = useState(item.codigo_seguimiento || '')
   const [fechaEnvio, setFechaEnvio] = useState(item.fecha_envio || '')
-  const [textoEmail, setTextoEmail] = useState(defaultTexto)
+  const [textoEmail, setTextoEmail] = useState(
+    !isDevolucion && !isService ? textoResolucion(item.empresa_envio || 'Correo Argentino', item.codigo_seguimiento || '') : defaultTexto
+  )
   // Múltiples archivos adjuntos para Devolución
   const [adjuntos, setAdjuntos]     = useState([])
   const [subiendo, setSubiendo]     = useState(false)
@@ -153,7 +171,7 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <div>
             <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Empresa</label>
-            <select value={empresa} onChange={e => setEmpresa(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%' }}>
+            <select value={empresa} onChange={e => { setEmpresa(e.target.value); if (!isDevolucion && !isService) setTextoEmail(textoResolucion(e.target.value, codigo)) }} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%' }}>
               <option value="Correo Argentino">Correo Argentino</option>
               <option value="Andreani">Andreani</option>
               <option value="Logistica Propia">Logística Propia</option>
@@ -162,7 +180,7 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
           {empresa !== 'Logistica Propia' ? (
             <div>
               <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Código de seguimiento</label>
-              <input type="text" value={codigo} onChange={e => setCodigo(e.target.value)} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%', outline: 'none' }} placeholder="Código de seguimiento" />
+              <input type="text" value={codigo} onChange={e => { setCodigo(e.target.value); if (!isDevolucion && !isService) setTextoEmail(textoResolucion(empresa, e.target.value)) }} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, width: '100%', outline: 'none' }} placeholder="Código de seguimiento" />
             </div>
           ) : (
             <div>
@@ -232,7 +250,7 @@ function PanelEnvio({ item, tipo, onClose, onGuardar }) {
 function PanelNotificarService({ item, onClose, onGuardar }) {
   const [fechaVisita, setFechaVisita] = useState('')
   const defaultTexto = (fecha) =>
-    `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nLe informamos que el día "${fecha || '[FECHA]'}" estaremos realizando el retiro de la unidad y la entrega de un reemplazo. Recuerde que el día del cambio tenés el equipo listo para ser retirado y entregar sólo el Panel, es decir, conservar el kit de instalación (y sus respectivas patas en el caso de corresponder) para ser utilizadas con la nueva unidad de reemplazo.`
+    `Nos contactamos de TEMPTECH por el reclamo "${item.tracking_id}".\nLe informamos que el día "${fecha || '[FECHA]'}" estaremos realizando el retiro de la unidad y la entrega de un reemplazo. Recuerde que el día del cambio tener el equipo listo para ser retirado y entregar sólo el Panel, es decir, conservar el kit de instalación (y sus respectivas patas en el caso de corresponder) para ser utilizadas con la nueva unidad de reemplazo.`
   const [textoEmail, setTextoEmail] = useState(defaultTexto(''))
 
   // Actualizar texto cuando cambia la fecha
@@ -343,7 +361,7 @@ export default function AdminList() {
     if (item.estado === 'cerrado' || !item?.id) return
     const { error } = await supabase.from('devoluciones').update({ estado: 'Ingresado', aprobado: 'NO', fecha_aprobado: null, fecha_desaprobado: new Date().toISOString(), motivo_rechazo: null }).eq('id', item.id)
     if (error) { alert('Error al desaprobar'); return }
-    await fetch('/api/enviar-desaprobado', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: item.email, nombre: item.nombre_apellido, tracking_id: item.tracking_id, motivo: textoRechazo }) })
+    await fetch('/api/enviar-desaprobado', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: (item.email || '').trim(), nombre: item.nombre_apellido || item.nombre || '', tracking_id: item.tracking_id || '' }) })
     await cargar()
   }
 
@@ -391,8 +409,17 @@ export default function AdminList() {
     if (notaTexto === null) return
     const nuevaNota = armarLineaNota(tipo.toUpperCase(), notaTexto)
 
-    // Agregar links de todos los adjuntos al final del texto
+    // Armar texto final con datos de envío para Resolución
     let textoFinal = textoEmail
+    if (tipo !== 'Devolucion' && empresa !== 'Logistica Propia' && codigo) {
+      const linkMap = {
+        'Correo Argentino': `https://www.correoargentino.com.ar/formularios/e-commerce?id=${codigo}`,
+        'Andreani': `https://www.andreani.com/#!/informacionEnvio/${codigo}`,
+      }
+      const link = linkMap[empresa] || codigo
+      textoFinal += `\nEmpresa: "${empresa}"\nCódigo de seguimiento: "${codigo}"\nLink de seguimiento: ${link}`
+    }
+    // Agregar links de adjuntos al final del texto
     if (adjuntosUrls && adjuntosUrls.length > 0) {
       textoFinal += '\n\nArchivos adjuntos:\n' + adjuntosUrls.map((url, i) => `${i + 1}. ${url}`).join('\n')
     }
@@ -577,7 +604,19 @@ export default function AdminList() {
                         <div style={{ fontSize: 10, fontWeight: 700, color: T.text3, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>Cliente</div>
                         <InfoRow label="Nombre" value={item.nombre_apellido || item.nombre} />
                         <InfoRow label="Email" value={item.email} />
-                        <InfoRow label="Teléfono" value={item.telefono} />
+                        {item.telefono && (
+                          <div style={{ display: 'flex', gap: 8, fontSize: 13, marginBottom: 5 }}>
+                            <span style={{ color: T.text3, minWidth: 140, flexShrink: 0 }}>Teléfono</span>
+                            <a
+                              href={`https://wa.me/${item.telefono.replace(/\D/g, '')}?text=${encodeURIComponent('Hola como estas. Nos comunicamos del area de Post Venta de TEMPTECH')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: '#25D366', textDecoration: 'none', fontWeight: 600 }}
+                            >
+                              {item.telefono}
+                            </a>
+                          </div>
+                        )}
                         <InfoRow label="Dirección" value={item.direccion} />
                         <InfoRow label="Localidad" value={`${item.localidad || ''} ${item.provincia || ''} ${item.codigo_postal || ''}`} />
                       </div>

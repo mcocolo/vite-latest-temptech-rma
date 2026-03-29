@@ -12,37 +12,29 @@ export default async function handler(req, res) {
 
     const email = (req.body?.email || '').trim()
     const nombre = (req.body?.nombre || '').trim()
-    const producto = (req.body?.producto || '').trim()
-    const modelo = (req.body?.modelo || '').trim()
     const tracking_id = (req.body?.tracking_id || '').trim()
 
     if (!email) {
       return res.status(400).json({ error: 'Falta email' })
     }
 
-    const subject = `Actualización de su caso${tracking_id ? ' #' + tracking_id : ''}`
+    const subject = `TEMPTECH - Desaprobado reclamo ${tracking_id}`
 
     const html = `
-      <p>Estimado/a ${nombre ? ' ' + nombre : ''},</p>
+      <div style="font-family: Arial, sans-serif; color: #111;">
+        <p>Estimado/a ${nombre || 'cliente'},</p>
 
-      <p>
-        Su caso no fue aprobado debido a algún faltante de información adjuntada.
-      </p>
+        <p>Le comunicamos que su proceso <strong>${tracking_id}</strong> fue revisado por nuestro equipo y el mismo fue <strong>DESAPROBADO</strong>.</p>
 
-      <p>
-        Le solicitamos verificar la documentación enviada y volver a cargar la solicitud con la información completa.
-      </p>
+        <p>Esto quiere decir que la información cargada se encuentra incompleta. Le solicitamos por favor volver a ingresar la información completando todos los campos requeridos.</p>
 
-      <p><strong>Producto:</strong> ${producto || ''} ${modelo || ''}</p>
-
-      <p>Saludos cordiales.</p>
-      <p><strong>TEMPTECH</strong></p>
+        <p>Saludos cordiales,<br/>Equipo Soporte TEMPTECH</p>
+      </div>
     `
 
     const { data, error } = await resend.emails.send({
       from: 'TEMPTECH <notificaciones@temptech.com.ar>',
       to: [email],
-      cc: ['notificaciones@temptech.com.ar'],
       subject,
       html,
     })
