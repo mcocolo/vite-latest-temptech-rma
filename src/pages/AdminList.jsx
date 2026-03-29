@@ -304,6 +304,9 @@ export default function AdminList() {
   const [rechazoAbiertoId, setRechazoAbiertoId] = useState(null)
   const [textoRechazo, setTextoRechazo]         = useState('')
   const [notaRechazo, setNotaRechazo]           = useState('')
+  const [desaprobarAbiertoId, setDesaprobarAbiertoId] = useState(null)
+  const [textoDesaprobar, setTextoDesaprobar]         = useState('')
+  const [notaDesaprobar, setNotaDesaprobar]           = useState('')
   const [panelAbierto, setPanelAbierto]         = useState(null)
   const [notificarServiceId, setNotificarServiceId] = useState(null)
   const [notasInput, setNotasInput] = useState({})
@@ -357,11 +360,23 @@ export default function AdminList() {
     await cargar()
   }
 
-  async function handleDesaprobar(item) {
+  function handleDesaprobar(item) {
     if (item.estado === 'cerrado' || !item?.id) return
-    const { error } = await supabase.from('devoluciones').update({ estado: 'Ingresado', aprobado: 'NO', fecha_aprobado: null, fecha_desaprobado: new Date().toISOString(), motivo_rechazo: null }).eq('id', item.id)
+    const nombre = item.nombre_apellido || item.nombre || 'cliente'
+    const tracking_id = item.tracking_id || ''
+    setTextoDesaprobar(`Estimado/a ${nombre},\n\nLe comunicamos que su proceso ${tracking_id} fue revisado por nuestro equipo y el mismo fue DESAPROBADO.\n\nEsto quiere decir que la información cargada se encuentra incompleta. Le solicitamos por favor volver a ingresar la información completando todos los campos requeridos.\n\nSaludos cordiales,\nEquipo Soporte TEMPTECH`)
+    setNotaDesaprobar('')
+    setDesaprobarAbiertoId(item.id)
+  }
+
+  async function confirmarDesaprobar(item) {
+    const nuevaNota = armarLineaNota('DESAPROBADO', notaDesaprobar)
+    const { error } = await supabase.from('devoluciones').update({ estado: 'Ingresado', aprobado: 'NO', fecha_aprobado: null, fecha_desaprobado: new Date().toISOString(), motivo_rechazo: null, notas: unirNotas(item.notas, nuevaNota) }).eq('id', item.id)
     if (error) { alert('Error al desaprobar'); return }
-    await fetch('/api/enviar-desaprobado', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: (item.email || '').trim(), nombre: item.nombre_apellido || item.nombre || '', tracking_id: item.tracking_id || '' }) })
+    await fetch('/api/enviar-desaprobado', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: (item.email || '').trim(), nombre: item.nombre_apellido || item.nombre || '', tracking_id: item.tracking_id || '', texto: textoDesaprobar }) })
+    setDesaprobarAbiertoId(null)
+    setTextoDesaprobar('')
+    setNotaDesaprobar('')
     await cargar()
   }
 
@@ -735,6 +750,27 @@ export default function AdminList() {
                       <Btn onClick={() => { setRechazoAbiertoId(item.id); setTextoRechazo(item.motivo_rechazo || DEFAULT_RECHAZO(item.tracking_id)); setNotaRechazo('') }} disabled={esCerrado} variant="danger">Rechazar</Btn>
                       <Btn onClick={() => cerrarCaso(item)}>Cerrar</Btn>
                     </div>
+
+                    {/* Panel desaprobar */}
+                    {desaprobarAbiertoId === item.id && (
+                      <div style={{ margin: '0 22px 18px', padding: 16, background: 'rgba(234,179,8,0.08)', border: `1px solid ${T.yellow}40`, borderRadius: T.radius }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: T.yellow, marginBottom: 10 }}>Desaprobar — texto del email al cliente (editable)</div>
+                        <div style={{ marginBottom: 10 }}>
+                          <label style={{ fontSize: 11, color: T.text3, display: 'block', marginBottom: 5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Nota interna</label>
+                          <input type="text" value={notaDesaprobar} onChange={e => setNotaDesaprobar(e.target.value)} placeholder="Nota interna (opcional)" style={{ width: '100%', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '8px 12px', color: T.text, fontSize: 13, fontFamily: T.font, outline: 'none', marginBottom: 10 }} />
+                        </div>
+                        <textarea
+                          value={textoDesaprobar}
+                          onChange={e => setTextoDesaprobar(e.target.value)}
+                          rows={8}
+                          style={{ width: '100%', background: T.surface, border: `1px solid ${T.border}`, borderRadius: T.radius, padding: '10px 12px', color: T.text, fontSize: 13, fontFamily: T.font, resize: 'vertical', outline: 'none', marginBottom: 10, lineHeight: 1.7 }}
+                        />
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <Btn variant="warn" onClick={() => confirmarDesaprobar(item)}>Confirmar y enviar email</Btn>
+                          <Btn onClick={() => { setDesaprobarAbiertoId(null); setTextoDesaprobar(''); setNotaDesaprobar('') }}>Cancelar</Btn>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Panel rechazo — solo textarea email editable */}
                     {rechazoAbiertoId === item.id && (

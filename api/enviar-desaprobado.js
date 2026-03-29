@@ -11,8 +11,8 @@ export default async function handler(req, res) {
     console.log('BODY enviar-desaprobado:', req.body)
 
     const email = (req.body?.email || '').trim()
-    const nombre = (req.body?.nombre || '').trim()
     const tracking_id = (req.body?.tracking_id || '').trim()
+    const texto = (req.body?.texto || '').trim()
 
     if (!email) {
       return res.status(400).json({ error: 'Falta email' })
@@ -20,17 +20,7 @@ export default async function handler(req, res) {
 
     const subject = `TEMPTECH - Desaprobado reclamo ${tracking_id}`
 
-    const html = `
-      <div style="font-family: Arial, sans-serif; color: #111;">
-        <p>Estimado/a ${nombre || 'cliente'},</p>
-
-        <p>Le comunicamos que su proceso <strong>${tracking_id}</strong> fue revisado por nuestro equipo y el mismo fue <strong>DESAPROBADO</strong>.</p>
-
-        <p>Esto quiere decir que la información cargada se encuentra incompleta. Le solicitamos por favor volver a ingresar la información completando todos los campos requeridos.</p>
-
-        <p>Saludos cordiales,<br/>Equipo Soporte TEMPTECH</p>
-      </div>
-    `
+    const html = `<div style="font-family: Arial, sans-serif; color: #111; white-space: pre-line;">${texto}</div>`
 
     const { data, error } = await resend.emails.send({
       from: 'TEMPTECH <notificaciones@temptech.com.ar>',
