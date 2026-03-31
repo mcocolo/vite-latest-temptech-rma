@@ -6,6 +6,11 @@ console.log('APROBADO PRIMEROS 6 CHARS KEY:', process.env.RESEND_API_KEY?.slice(
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', 'https://temptech-portal.vercel.app')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  if (req.method === 'OPTIONS') return res.status(200).end()
+
   console.log('--- INICIO enviar-aprobado ---')
 
   if (req.method !== 'POST') {
@@ -48,7 +53,7 @@ export default async function handler(req, res) {
 
             <p>
               Le comunicamos que su proceso <strong>${tracking_id || '-'}</strong>
-              fue revisado por nuestro equipo y el mismo fue <b>APROBADO</b>.
+              fue revisado por nuestro equipo y el mismo fué <b>ADMITIDO</b> para revisión.
             </p>
 
             <p>
